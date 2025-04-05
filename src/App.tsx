@@ -2,20 +2,19 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Trash, Plus, Database } from "lucide-react"
+import { Trash, Plus } from "lucide-react"
 import { useState } from "react"
 import DBConnectionDialog from "./components/header/db-connection-dialog"
 
 
 export function App() {
-  const [dbDialogOpen, setDbDialogOpen] = useState(false)
+
   const [aiDialogOpen, setAiDialogOpen] = useState(false)
 
-  const handleClick = () => {
+  const handleClick =  () => {
       window.electronAPI.sayHi();
   };
   
@@ -59,25 +58,8 @@ export function App() {
             </Button>
             
             <div className="flex items-center space-x-2">
-              
-              {/* Database Selector */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex items-center text-red-500">
-                    <Database className="mr-2 h-4 w-4" />
-                    <span>Database: Disconnected</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>Database 1</DropdownMenuItem>
-                  <DropdownMenuItem>Database 2</DropdownMenuItem>
-                  <div className="p-2 border-t">
-                    <Button onClick={() => setDbDialogOpen(true)} variant="outline" size="sm" className="w-full">
-                      Connect new database
-                    </Button>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <DBConnectionDialog/>
+
               
               <div className="text-sm text-muted-foreground">No Schema Loaded</div>
             </div>
@@ -140,8 +122,6 @@ export function App() {
         </div>
       </main>
 
-      {/* Database Connection Dialog */}
-      <DBConnectionDialog dbDialogOpen={dbDialogOpen} setDbDialogOpen={setDbDialogOpen}/>
       
       {/* AI Configuration Dialog */}
       <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>

@@ -1,7 +1,7 @@
 interface Window {
     electronAPI: {
       sayHi: () => string;
-      // other methods...
+      testConnection: (connectionDetails: ConnectionDetails) => Promise<boolean>;
     };
     // other properties...
   }
