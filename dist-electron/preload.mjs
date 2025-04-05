@@ -17,6 +17,13 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
     const [channel, ...omit] = args;
     return electron.ipcRenderer.invoke(channel, ...omit);
   }
-  // You can expose other APTs you need here.
-  // ...
+});
+electron.contextBridge.exposeInMainWorld("api", {
+  connectToDatabase: (connectionDetails) => electron.ipcRenderer.invoke("connect-to-database", connectionDetails),
+  testConnection: (connectionDetails) => electron.ipcRenderer.invoke("test-connection", connectionDetails),
+  getSchema: () => electron.ipcRenderer.invoke("get-schema"),
+  updateModelConfig: (provider, config) => electron.ipcRenderer.invoke("update-model-config", provider, config),
+  getModelConfigs: () => electron.ipcRenderer.invoke("get-model-configs"),
+  generateSql: (naturalLanguage, schema, provider) => electron.ipcRenderer.invoke("generate-sql", naturalLanguage, schema, provider),
+  executeQuery: (query) => electron.ipcRenderer.invoke("execute-query", query)
 });
