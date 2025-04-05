@@ -94,8 +94,20 @@ export default function Chat() {
     
     // Function to execute SQL query
     const executeQuery = async (sqlQuery: string) => {
+        console.log("Execute button clicked for SQL:", sqlQuery);
+        console.log("Current database config:", dbConfig);
+        
         if (!dbConfig) {
             setError("Database not configured. Please configure a database connection first.");
+            return;
+        }
+        
+        // Make sure all required fields are present in the dbConfig
+        const requiredFields = ['host', 'port', 'database', 'user'];
+        const missingFields = requiredFields.filter(field => !dbConfig[field as keyof typeof dbConfig]);
+        
+        if (missingFields.length > 0) {
+            setError(`Database configuration is incomplete. Missing fields: ${missingFields.join(', ')}`);
             return;
         }
         

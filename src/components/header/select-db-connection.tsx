@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form";
 import { Input } from "../ui/input";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, CheckCircle, XCircle, Database, Trash2, Pencil } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useDbConnections } from "@/hooks/useDbConnections";
@@ -27,6 +27,13 @@ export default function DBConnectionDialog() {
     const { savedConnections, setSavedConnections } = useDbConnections();
     const { selectedConnection, setSelectedConnection } = useSelectedDbConnection();
 
+    // Add debugging log for component mount
+    useEffect(() => {
+        console.log("DBConnectionDialog mounted");
+        console.log("Saved connections:", savedConnections);
+        console.log("Selected connection:", selectedConnection);
+    }, [savedConnections, selectedConnection]);
+
     const form = useForm<ConnectionDetails>({
         defaultValues: {
             name: "",
@@ -43,7 +50,7 @@ export default function DBConnectionDialog() {
         try {
             setIsLoading(true);
             setConnectionStatus("idle");
-            console.log('Testing connection...');
+            console.log('Testing connection with config:', formData);
 
             const connected = await window.electronAPI.testConnection(formData);
 
@@ -87,6 +94,8 @@ export default function DBConnectionDialog() {
                 id: formData.id || `conn-${Date.now()}`
             };
 
+            console.log("Saving connection:", connectionDetails);
+
             // Check if it's an edit or new connection
             let updatedConnections;
             if (connectionDetails.id && savedConnections.some(c => c.id === connectionDetails.id)) {
@@ -123,65 +132,88 @@ export default function DBConnectionDialog() {
         }
     };
     
-    const handleSelectedDbConnection = (connection: ConnectionDetails) => {
+    const handleSelectConnection = (connection: ConnectionDetails) => {
+        console.log("Selected connection:", connection);
         setSelectedConnection(connection);
-    }; 
+    };
+
+    // Edit existing connection
+    const handleEditConnection = (e: React.MouseEvent, connection: ConnectionDetails) => {
+        e.stopPropagation();
+        console.log('Editing connection:', connection);
+        // Pre-fill form with connection data for editing
+        form.reset(connection);
+        setDbDialogOpen(true);
+    };
+
+    // Delete connection
+    const handleDeleteConnection = (e: React.MouseEvent, connectionId: string) => {
+        e.stopPropagation();
+        console.log('Removing connection:', connectionId);
+        
+        // If deleting the selected connection, clear it
+        if (selectedConnection?.id === connectionId) {
+            setSelectedConnection(null);
+        }
+        
+        removeConnection(connectionId, savedConnections, setSavedConnections);
+    };
 
     return (
         <>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className={`flex items-center`}>
+                    <Button variant="outline" className="flex items-center">
                         <Database className="mr-2 h-4 w-4" />
-
-                        {selectedConnection?.name || 'Select Database'}
-
-
+                        <span className="max-w-[150px] truncate">
+                            {selectedConnection?.name || 'Select Database'}
+                        </span>
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent align="end">
                     {savedConnections.length > 0 ? (
                         savedConnections.map(conn => (
-                            <div key={conn.id} className={`flex items-center px-2 py-1.5 ${selectedConnection?.id === conn.id ? 'bg-accent' : 'hover:bg-accent'} rounded-sm my-0.5 group`} onClick={() => handleSelectedDbConnection(conn)}>
-                                <span className="flex-grow truncate mr-2">{conn.name} ({conn.database}@{conn.host})</span>
-                                <div className="flex-shrink-0 flex items-center space-x-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                        type="button"
-                                        className="focus:outline-none p-1 rounded-sm hover:bg-background"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            // Pre-fill form with connection data for editing
-                                            form.reset(conn);
-                                            setDbDialogOpen(true);
-                                        }}
-                                        title="Edit connection"
+                            <DropdownMenuItem 
+                                key={conn.id} 
+                                className="flex items-center justify-between cursor-pointer"
+                                onClick={() => handleSelectConnection(conn)}
+                            >
+                                <span className="truncate mr-2">
+                                    {conn.name} ({conn.database}@{conn.host})
+                                </span>
+                                <div className="flex items-center space-x-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6"
+                                        onClick={(e) => handleEditConnection(e, conn)}
                                     >
-                                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="focus:outline-none p-1 rounded-sm hover:bg-background"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            console.log('Removing connection:', conn.id);
-                                            removeConnection(conn.id!, savedConnections, setSavedConnections);
-                                        }}
-                                        title="Delete connection"
+                                        <Pencil className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 text-destructive"
+                                        onClick={(e) => handleDeleteConnection(e, conn.id as string)}
                                     >
-                                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                                    </button>
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
                                 </div>
-                            </div>
+                            </DropdownMenuItem>
                         ))
                     ) : (
-                        <DropdownMenuItem>No saved connections</DropdownMenuItem>
+                        <DropdownMenuItem disabled>No saved connections</DropdownMenuItem>
                     )}
-
-                    <div className="p-2 border-t">
-                        <Button onClick={() => setDbDialogOpen(true)} variant="outline" size="sm" className="w-full">
-                            Connect new database
-                        </Button>
-                    </div>
+                    
+                    <DropdownMenuItem
+                        className="border-t mt-2 pt-2 justify-center"
+                        onSelect={(e) => {
+                            e.preventDefault();
+                            setDbDialogOpen(true);
+                        }}
+                    >
+                        Connect new database
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
 
@@ -226,7 +258,7 @@ export default function DBConnectionDialog() {
                                     <FormItem>
                                         <FormLabel>Port</FormLabel>
                                         <FormControl>
-                                            <Input type="number" placeholder="5432" {...field} />
+                                            <Input placeholder="5432" {...field} />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -237,9 +269,9 @@ export default function DBConnectionDialog() {
                                 name="database"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Database Name</FormLabel>
+                                        <FormLabel>Database</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="mydatabase" {...field} />
+                                            <Input placeholder="postgres" {...field} />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -265,47 +297,54 @@ export default function DBConnectionDialog() {
                                     <FormItem>
                                         <FormLabel>Password</FormLabel>
                                         <FormControl>
-                                            <Input
-                                                type="password"
-                                                placeholder="********"
-                                                {...field}
-                                                value={typeof field.value === 'function' ? '' : field.value}
-                                            />
+                                            <Input type="password" {...field} />
                                         </FormControl>
                                     </FormItem>
                                 )}
                             />
+
+                            <input type="hidden" {...form.register("id")} />
                         </form>
                     </Form>
 
-                    <DialogFooter className="gap-2 sm:gap-0">
-                        <Button
-                            variant="outline"
-                            onClick={handleTestConnection}
-                            disabled={isLoading}
-                            className={connectionStatus === "success" ? "bg-green-100 text-green-700 hover:bg-green-200 hover:text-green-800" :
-                                connectionStatus === "error" ? "bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800" : ""}
-                        >
-                            {isLoading ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Testing...
-                                </>
-                            ) : connectionStatus === "success" ? (
-                                <>
-                                    <CheckCircle className="mr-2 h-4 w-4" />
-                                    Connection Successful
-                                </>
-                            ) : connectionStatus === "error" ? (
-                                <>
-                                    <XCircle className="mr-2 h-4 w-4" />
-                                    Connection Failed (Click to retry)
-                                </>
-                            ) : (
-                                "Test Connection"
+                    <DialogFooter className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleTestConnection}
+                                disabled={isLoading}
+                                className="mr-2"
+                            >
+                                {isLoading ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    "Test Connection"
+                                )}
+                            </Button>
+
+                            {connectionStatus === "success" && (
+                                <div className="flex items-center text-green-600">
+                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                    <span className="text-xs">Connection successful</span>
+                                </div>
                             )}
+
+                            {connectionStatus === "error" && (
+                                <div className="flex items-center text-red-600">
+                                    <XCircle className="h-4 w-4 mr-1" />
+                                    <span className="text-xs">Connection failed</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <Button
+                            type="button"
+                            onClick={handleConnectionSave}
+                            disabled={isLoading}
+                        >
+                            Save Connection
                         </Button>
-                        <Button onClick={handleConnectionSave} disabled={isLoading}>Save Connection</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
