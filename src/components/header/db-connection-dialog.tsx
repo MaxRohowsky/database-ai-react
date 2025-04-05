@@ -3,9 +3,11 @@ import { Button } from "../ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form";
 import { Input } from "../ui/input";
 import { useForm } from "react-hook-form";
-import { useState, useEffect } from "react";
-import { Loader2, CheckCircle, XCircle, Database } from "lucide-react";
+import { useState } from "react";
+import { Loader2, CheckCircle, XCircle, Database, Trash2, Pencil } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { useDbConnections } from "@/hooks/useDbConnections";
+import { removeConnection } from "@/lib/removeConnection";
 
 interface ConnectionDetails {
     id?: string;
@@ -21,9 +23,8 @@ export default function DBConnectionDialog() {
     const [isLoading, setIsLoading] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">("idle");
     const [dbDialogOpen, setDbDialogOpen] = useState(false);
-    const [savedConnections, setSavedConnections] = useState<ConnectionDetails[]>([]);
-    const [currentConnection, setCurrentConnection] = useState<ConnectionDetails | null>(null);
-    
+    const { savedConnections, setSavedConnections } = useDbConnections();
+
     const form = useForm<ConnectionDetails>({
         defaultValues: {
             name: "",
@@ -34,32 +35,6 @@ export default function DBConnectionDialog() {
             password: ""
         }
     });
-
-    // Load saved connections on mount
-    useEffect(() => {
-        const loadConnections = () => {
-            try {
-                const saved = localStorage.getItem('databaseConnections');
-                if (saved) {
-                    const connections = JSON.parse(saved) as ConnectionDetails[];
-                    setSavedConnections(connections);
-                    
-                    // Check for active connection
-                    const activeId = localStorage.getItem('activeConnectionId');
-                    if (activeId) {
-                        const active = connections.find(c => c.id === activeId);
-                        if (active) {
-                            setCurrentConnection(active);
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to load saved connections:', error);
-            }
-        };
-        
-        loadConnections();
-    }, []);
 
     const handleTestConnection = async () => {
         const formData = form.getValues();
@@ -94,91 +69,112 @@ export default function DBConnectionDialog() {
         }
     };
 
-    const handleConnectionSave = async () => {
-        try {
-            // Test connection first
-            const isConnected = await handleTestConnection();
-            if (!isConnected) {
-                return; // Don't save if connection test fails
-            }
-            
-            const formData = form.getValues();
-            
-            // Generate ID if this is a new connection
-            const connectionDetails: ConnectionDetails = {
-                ...formData,
-                id: formData.id || `conn-${Date.now()}`
-            };
-            
-            // Check if it's an edit or new connection
-            let updatedConnections;
-            if (connectionDetails.id && savedConnections.some(c => c.id === connectionDetails.id)) {
-                // Update existing connection
-                updatedConnections = savedConnections.map(conn => 
-                    conn.id === connectionDetails.id ? connectionDetails : conn
-                );
-            } else {
-                // Add new connection
-                updatedConnections = [...savedConnections, connectionDetails];
-            }
-            
-            // Save to localStorage
-            localStorage.setItem('databaseConnections', JSON.stringify(updatedConnections));
-            setSavedConnections(updatedConnections);
-            
-            // Set as current connection
-            setCurrentConnection(connectionDetails);
-            localStorage.setItem('activeConnectionId', connectionDetails.id || '');
-            
-            // Close dialog
-            setDbDialogOpen(false);
-            
-            // Reset form
-            form.reset({
-                name: "",
-                host: "localhost",
-                port: "5432",
-                database: "",
-                user: "postgres",
-                password: ""
-            });
-        } catch (error) {
-            console.error('Failed to save connection:', error);
-        }
-    };
-    
-    const handleSelectConnection = (connection: ConnectionDetails) => {
-        setCurrentConnection(connection);
-        localStorage.setItem('activeConnectionId', connection.id || '');
-    };
+  const handleConnectionSave = async () => {
+          try {
+              // Test connection first
+              const isConnected = await handleTestConnection();
+              if (!isConnected) {
+                  return; // Don't save if connection test fails
+              }
+              
+              const formData = form.getValues();
+              
+              // Generate ID if this is a new connection
+              const connectionDetails: ConnectionDetails = {
+                  ...formData,
+                  id: formData.id || `conn-${Date.now()}`
+              };
+              
+              // Check if it's an edit or new connection
+              let updatedConnections;
+              if (connectionDetails.id && savedConnections.some(c => c.id === connectionDetails.id)) {
+                  // Update existing connection
+                  updatedConnections = savedConnections.map(conn => 
+                      conn.id === connectionDetails.id ? connectionDetails : conn
+                  );
+              } else {
+                  // Add new connection
+                  updatedConnections = [...savedConnections, connectionDetails];
+              }
+              
+              // Save to localStorage
+              localStorage.setItem('databaseConnections', JSON.stringify(updatedConnections));
+              setSavedConnections(updatedConnections);
+              
+              // Set as current connection
+          /*     setCurrentConnection(connectionDetails); */
+              localStorage.setItem('activeConnectionId', connectionDetails.id || '');
+              
+              // Close dialog
+              setDbDialogOpen(false);
+              
+              // Reset form
+              form.reset({
+                  name: "",
+                  host: "localhost",
+                  port: "5432",
+                  database: "",
+                  user: "postgres",
+                  password: ""
+              });
+          } catch (error) {
+              console.error('Failed to save connection:', error);
+          }
+      };
+      /*
+      const handleSelectConnection = (connection: ConnectionDetails) => {
+          setCurrentConnection(connection);
+          localStorage.setItem('activeConnectionId', connection.id || '');
+      }; */
 
     return (
         <>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className={`flex items-center ${currentConnection ? 'text-green-500' : 'text-red-500'}`}>
+                    <Button variant="outline" className={`flex items-center`}>
                         <Database className="mr-2 h-4 w-4" />
-                        <span>
-                            {currentConnection 
-                                ? `Database: ${currentConnection.name}`
-                                : 'Database: Disconnected'}
-                        </span>
+
+
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                     {savedConnections.length > 0 ? (
                         savedConnections.map(conn => (
-                            <DropdownMenuItem 
-                                key={conn.id}
-                                onClick={() => handleSelectConnection(conn)}
-                                className={currentConnection?.id === conn.id ? 'bg-gray-100' : ''}
-                            >
-                                {conn.name} ({conn.database}@{conn.host})
-                            </DropdownMenuItem>
+                            <div key={conn.id} className="flex items-center px-2 py-1.5 hover:bg-accent rounded-sm my-0.5 group">
+                                <span className="flex-grow truncate mr-2">{conn.name} ({conn.database}@{conn.host})</span>
+                                <div className="flex-shrink-0 flex items-center space-x-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        type="button"
+                                        className="focus:outline-none p-1 rounded-sm hover:bg-background"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            // Pre-fill form with connection data for editing
+                                            form.reset(conn);
+                                            setDbDialogOpen(true);
+                                        }}
+                                        title="Edit connection"
+                                    >
+                                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="focus:outline-none p-1 rounded-sm hover:bg-background"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            console.log('Removing connection:', conn.id);
+                                            removeConnection(conn.id!, savedConnections, setSavedConnections);
+                                        }}
+                                        title="Delete connection"
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                    </button>
+                                </div>
+                            </div>
                         ))
                     ) : (
-                        <DropdownMenuItem disabled>No saved connections</DropdownMenuItem>
+                        <DropdownMenuItem>No saved connections</DropdownMenuItem>
                     )}
+
                     <div className="p-2 border-t">
                         <Button onClick={() => setDbDialogOpen(true)} variant="outline" size="sm" className="w-full">
                             Connect new database
