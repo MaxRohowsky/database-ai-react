@@ -6,9 +6,18 @@ import './App.css'
 function App() {
   const [count, setCount] = useState(0)
 
+  const handleClick = () => {
+    if (window.electronAPI) {
+      window.electronAPI.sayHi();
+    } else {
+      console.log('Not running in Electron environment');
+    }
+  };
+
   return (
     <>
       <div>
+        <button onClick={handleClick}>Click me!</button>
         <a href="https://electron-vite.github.io" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />
         </a>

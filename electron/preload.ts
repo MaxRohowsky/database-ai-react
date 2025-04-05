@@ -22,3 +22,11 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   // You can expose other APTs you need here.
   // ...
 })
+
+
+contextBridge.exposeInMainWorld('electronAPI', {
+  sayHi: () => {
+    console.log('hi');
+    return 'hi logged to console';
+  }
+});
