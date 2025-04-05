@@ -1,19 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-interface ConnectionDetails {
-  host: string;
-  port: string;
-  database: string;
-  user: string;
-  password: string;
-}
-
-interface AiModelConfig {
-  provider: 'openai' | 'claude';
-  apiKey: string;
-  model: string;
-}
-
 export interface ChatMessage {
   id: string;
   type: 'user' | 'sql' | 'result';
@@ -31,10 +17,6 @@ export interface Chat {
 }
 
 interface AppContextType {
-  dbConfig: ConnectionDetails | null;
-  setDbConfig: (config: ConnectionDetails | null) => void;
-  aiConfig: AiModelConfig | null;
-  setAiConfig: (config: AiModelConfig | null) => void;
   chats: Chat[];
   currentChatId: string | null;
   setCurrentChatId: (id: string | null) => void;
@@ -50,8 +32,6 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 const STORAGE_KEY = 'database-ai-chats';
 
 export function AppContextProvider({ children }: { children: ReactNode }) {
-  const [dbConfig, setDbConfig] = useState<ConnectionDetails | null>(null);
-  const [aiConfig, setAiConfig] = useState<AiModelConfig | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   
@@ -60,7 +40,7 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
     const loadChats = async () => {
       try {
         // Try to load from Electron's file system
-        if (window.electronAPI) {
+        if (window.electronAPI && 'loadChats' in window.electronAPI) {
           const savedChats = await window.electronAPI.loadChats();
           if (savedChats && savedChats.length > 0) {
             setChats(savedChats);
@@ -96,7 +76,7 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
     const saveChats = async () => {
       try {
         // Save to Electron's file system
-        if (window.electronAPI) {
+        if (window.electronAPI && 'saveChats' in window.electronAPI) {
           await window.electronAPI.saveChats(chats);
         }
         
@@ -178,10 +158,6 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider value={{ 
-      dbConfig, 
-      setDbConfig, 
-      aiConfig, 
-      setAiConfig,
       chats,
       currentChatId,
       setCurrentChatId,

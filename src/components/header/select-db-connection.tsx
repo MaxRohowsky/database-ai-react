@@ -104,8 +104,7 @@ export default function DBConnectionDialog() {
             setSavedConnections(updatedConnections);
 
             // Set as current connection
-            /*     setCurrentConnection(connectionDetails); */
-            localStorage.setItem('activeConnectionId', connectionDetails.id || '');
+            setSelectedConnection(connectionDetails);
 
             // Close dialog
             setDbDialogOpen(false);
@@ -126,7 +125,6 @@ export default function DBConnectionDialog() {
     
     const handleSelectedDbConnection = (connection: ConnectionDetails) => {
         setSelectedConnection(connection);
-        localStorage.setItem('activeConnectionId', connection.id || '');
     }; 
 
     return (

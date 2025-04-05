@@ -5,16 +5,19 @@ import { ScrollArea } from "../ui/scroll-area"
 import { Textarea } from "../ui/textarea"
 import { useAppContext } from "@/context-provider"
 import { AlertCircle, Send, Play, Loader2 } from "lucide-react"
+import { useAiModelConfig } from "@/hooks/useAiModelConfig"
+import { useSelectedDbConnection } from "@/hooks/useSelectedDbConnection"
 
 export default function Chat() {
     const { 
-        dbConfig, 
-        aiConfig, 
         currentChatId, 
         getCurrentChat, 
         addMessageToCurrentChat,
         createNewChat
     } = useAppContext();
+    
+    const { aiConfig } = useAiModelConfig();
+    const { selectedConnection: dbConfig } = useSelectedDbConnection();
     
     const [inputValue, setInputValue] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +37,12 @@ export default function Chat() {
     
     // Function to handle form submission
     const handleSubmit = async () => {
-        if (!inputValue.trim() || !aiConfig) return;
+        if (!inputValue.trim()) return;
+        
+        if (!aiConfig) {
+            setError("Please configure an OpenAI API key first.");
+            return;
+        }
         
         setIsLoading(true);
         setError(null);
@@ -45,17 +53,30 @@ export default function Chat() {
             content: inputValue
         });
         
+        const userQuery = inputValue.trim();
         setInputValue("");
         
         try {
+            console.log("Generating SQL with config:", JSON.stringify({
+                provider: aiConfig.provider,
+                model: aiConfig.model,
+                apiKeyLength: aiConfig.apiKey ? aiConfig.apiKey.length : 0
+            }));
+            
             // Generate SQL with AI
             const sqlResponse = await window.electronAPI.generateSQL(
                 aiConfig, 
-                inputValue
+                userQuery
             );
+            
+            console.log("SQL Response:", JSON.stringify(sqlResponse));
             
             if (sqlResponse.error) {
                 throw new Error(sqlResponse.error);
+            }
+            
+            if (!sqlResponse.sqlQuery) {
+                throw new Error("No SQL was generated. Please try again.");
             }
             
             // Add SQL message to context
@@ -64,6 +85,7 @@ export default function Chat() {
                 content: sqlResponse.sqlQuery
             });
         } catch (err) {
+            console.error("SQL generation error:", err);
             setError(err instanceof Error ? err.message : 'An error occurred generating SQL');
         } finally {
             setIsLoading(false);
@@ -73,7 +95,7 @@ export default function Chat() {
     // Function to execute SQL query
     const executeQuery = async (sqlQuery: string) => {
         if (!dbConfig) {
-            setError("Database not configured. Please configure database connection first.");
+            setError("Database not configured. Please configure a database connection first.");
             return;
         }
         
@@ -81,8 +103,22 @@ export default function Chat() {
         setError(null);
         
         try {
-            // @ts-expect-error - Type matching issues between context and window API
+            console.log("Executing SQL query:", sqlQuery);
+            console.log("Database config:", JSON.stringify({
+                host: dbConfig.host,
+                port: dbConfig.port,
+                database: dbConfig.database,
+                user: dbConfig.user,
+                hasPassword: !!dbConfig.password
+            }));
+            
             const result = await window.electronAPI.executeSQL(dbConfig, sqlQuery);
+            
+            console.log("SQL execution result:", JSON.stringify({
+                columns: result.columns,
+                rowCount: result.rows ? result.rows.length : 0,
+                error: result.error
+            }));
             
             if (result.error) {
                 throw new Error(result.error);
@@ -91,10 +127,11 @@ export default function Chat() {
             // Add result message to context
             addMessageToCurrentChat({
                 type: 'result',
-                content: result.rows,
-                columns: result.columns
+                content: result.rows || [],
+                columns: result.columns || []
             });
         } catch (err) {
+            console.error("SQL execution error:", err);
             setError(err instanceof Error ? err.message : 'An error occurred executing SQL');
         } finally {
             setIsLoading(false);
