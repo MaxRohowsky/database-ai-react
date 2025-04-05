@@ -1,7 +1,7 @@
-import React from 'react'
-import DBConnectionDialog from "./db-connection-dialog";
+
+import DBConnectionDialog from "./select-db-connection";
 import { Trash } from "lucide-react";
-import AiConfigDialog from "./ai-config-dialog";
+import AiConfigDialog from "./select-ai-model";
 import { Button } from "../ui/button";
 
 export default function Header() {
