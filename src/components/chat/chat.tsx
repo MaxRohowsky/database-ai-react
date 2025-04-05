@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Card, CardContent, CardFooter, CardHeader } from "../ui/card"
 import { Button } from "../ui/button"
 import { ScrollArea } from "../ui/scroll-area"
@@ -6,21 +6,31 @@ import { Textarea } from "../ui/textarea"
 import { useAppContext } from "@/context-provider"
 import { AlertCircle, Send, Play, Loader2 } from "lucide-react"
 
-interface ChatMessage {
-    id: string;
-    type: 'user' | 'sql' | 'result';
-    content: string | Record<string, unknown>[];
-    columns?: string[];
-    error?: string;
-}
-
 export default function Chat() {
-    const { dbConfig, aiConfig } = useAppContext();
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const { 
+        dbConfig, 
+        aiConfig, 
+        currentChatId, 
+        getCurrentChat, 
+        addMessageToCurrentChat,
+        createNewChat
+    } = useAppContext();
+    
     const [inputValue, setInputValue] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
+    
+    // Get the current chat's messages
+    const currentChat = getCurrentChat();
+    const messages = currentChat?.messages || [];
+    
+    // Scroll to bottom when messages change
+    useEffect(() => {
+        if (scrollAreaRef.current) {
+            scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+        }
+    }, [messages]);
     
     // Function to handle form submission
     const handleSubmit = async () => {
@@ -29,15 +39,12 @@ export default function Chat() {
         setIsLoading(true);
         setError(null);
         
-        // Add user message
-        const userMessageId = Date.now().toString();
-        const userMessage: ChatMessage = {
-            id: userMessageId,
+        // Add user message to context
+        addMessageToCurrentChat({
             type: 'user',
             content: inputValue
-        };
+        });
         
-        setMessages(prev => [...prev, userMessage]);
         setInputValue("");
         
         try {
@@ -51,25 +58,15 @@ export default function Chat() {
                 throw new Error(sqlResponse.error);
             }
             
-            // Add SQL message
-            const sqlMessage: ChatMessage = {
-                id: Date.now().toString(),
+            // Add SQL message to context
+            addMessageToCurrentChat({
                 type: 'sql',
                 content: sqlResponse.sqlQuery
-            };
-            
-            setMessages(prev => [...prev, sqlMessage]);
+            });
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred generating SQL');
         } finally {
             setIsLoading(false);
-            
-            // Scroll to bottom
-            setTimeout(() => {
-                if (scrollAreaRef.current) {
-                    scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-                }
-            }, 100);
         }
     };
     
@@ -91,28 +88,25 @@ export default function Chat() {
                 throw new Error(result.error);
             }
             
-            // Add result message
-            const resultMessage: ChatMessage = {
-                id: Date.now().toString(),
+            // Add result message to context
+            addMessageToCurrentChat({
                 type: 'result',
                 content: result.rows,
                 columns: result.columns
-            };
-            
-            setMessages(prev => [...prev, resultMessage]);
+            });
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred executing SQL');
         } finally {
             setIsLoading(false);
-            
-            // Scroll to bottom
-            setTimeout(() => {
-                if (scrollAreaRef.current) {
-                    scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-                }
-            }, 100);
         }
     };
+
+    // Create a new chat if none exists
+    useEffect(() => {
+        if (!currentChatId) {
+            createNewChat();
+        }
+    }, [currentChatId, createNewChat]);
 
     return (
         <>

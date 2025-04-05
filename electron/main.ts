@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 /* import { createRequire } from 'node:module' */
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import fs from 'node:fs'
 import { testConnection, executeQuery } from './services/database'
 import { generateSqlQuery } from './services/ai'
 
@@ -38,6 +39,9 @@ let win: BrowserWindow | null
 // Create IPC Handlers
 //--------------------------------
 
+// Path to store chat history
+const userDataPath = app.getPath('userData');
+const chatHistoryPath = path.join(userDataPath, 'chat-history.json');
 
 function setupIPC() {
   ipcMain.handle('testConnection', async (_, config) => {
@@ -64,6 +68,31 @@ function setupIPC() {
     } catch (error) {
       console.error('SQL execution error:', error);
       throw new Error(`SQL execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  });
+
+  // Save chats to file system
+  ipcMain.handle('saveChats', async (_, chats) => {
+    try {
+      fs.writeFileSync(chatHistoryPath, JSON.stringify(chats, null, 2), 'utf-8');
+      return { success: true };
+    } catch (error) {
+      console.error('Error saving chats:', error);
+      throw new Error(`Failed to save chats: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  });
+
+  // Load chats from file system
+  ipcMain.handle('loadChats', async () => {
+    try {
+      if (fs.existsSync(chatHistoryPath)) {
+        const chatsData = fs.readFileSync(chatHistoryPath, 'utf-8');
+        return JSON.parse(chatsData);
+      }
+      return [];
+    } catch (error) {
+      console.error('Error loading chats:', error);
+      throw new Error(`Failed to load chats: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   });
 }

@@ -27,5 +27,7 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
   },
   testConnection: (config) => electron.ipcRenderer.invoke("testConnection", config),
   generateSQL: (aiConfig, prompt, dbSchema) => electron.ipcRenderer.invoke("generateSQL", { aiConfig, prompt, dbSchema }),
-  executeSQL: (dbConfig, query) => electron.ipcRenderer.invoke("executeSQL", { dbConfig, query })
+  executeSQL: (dbConfig, query) => electron.ipcRenderer.invoke("executeSQL", { dbConfig, query }),
+  saveChats: (chats) => electron.ipcRenderer.invoke("saveChats", chats),
+  loadChats: () => electron.ipcRenderer.invoke("loadChats")
 });
