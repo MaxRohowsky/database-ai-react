@@ -1,3 +1,4 @@
+import React from 'react'
 import DBConnectionDialog from "./db-connection-dialog";
 import { Trash } from "lucide-react";
 import AiConfigDialog from "./ai-config-dialog";

@@ -2,7 +2,8 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 /* import { createRequire } from 'node:module' */
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import { testConnection } from './services/database'
+import { testConnection, executeQuery } from './services/database'
+import { generateSqlQuery } from './services/ai'
 
 
 /* const require = createRequire(import.meta.url) */
@@ -45,6 +46,24 @@ function setupIPC() {
     } catch (error) {
       console.error('Connection test error:', error);
       throw new Error(`Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  });
+
+  ipcMain.handle('generateSQL', async (_, { aiConfig, prompt, dbSchema }) => {
+    try {
+      return await generateSqlQuery(aiConfig, prompt, dbSchema);
+    } catch (error) {
+      console.error('SQL generation error:', error);
+      throw new Error(`SQL generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  });
+
+  ipcMain.handle('executeSQL', async (_, { dbConfig, query }) => {
+    try {
+      return await executeQuery(dbConfig, query);
+    } catch (error) {
+      console.error('SQL execution error:', error);
+      throw new Error(`SQL execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   });
 }

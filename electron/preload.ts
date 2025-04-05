@@ -1,5 +1,6 @@
 import { ipcRenderer, contextBridge } from 'electron'
-import { PoolConfig } from 'pg'
+import { AiModelConfig } from './services/ai'
+import { ConnectionDetails } from './services/database'
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
@@ -30,6 +31,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     console.log('hi');
     return 'hi logged to console';
   },
-  testConnection: (config: PoolConfig) => ipcRenderer.invoke('testConnection', config)
-  
+  testConnection: (config: ConnectionDetails) => ipcRenderer.invoke('testConnection', config),
+  generateSQL: (aiConfig: AiModelConfig, prompt: string, dbSchema?: string) => 
+    ipcRenderer.invoke('generateSQL', { aiConfig, prompt, dbSchema }),
+  executeSQL: (dbConfig: ConnectionDetails, query: string) => 
+    ipcRenderer.invoke('executeSQL', { dbConfig, query })
 });
