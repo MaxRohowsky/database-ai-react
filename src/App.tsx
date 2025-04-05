@@ -8,17 +8,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Trash, Plus, Database } from "lucide-react"
 import { useState } from "react"
+import DBConnectionDialog from "./components/header/db-connection-dialog"
+
 
 export function App() {
   const [dbDialogOpen, setDbDialogOpen] = useState(false)
   const [aiDialogOpen, setAiDialogOpen] = useState(false)
+
+  const handleClick = () => {
+      window.electronAPI.sayHi();
+  };
   
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <aside className="w-64 border-r border-border bg-muted/40 flex flex-col">
         <div className="p-4">
-          <Button className="w-full" variant="default">
+          <Button onClick={handleClick} className="w-full" variant="default">
             <Plus className="mr-2 h-4 w-4" /> New Chat
           </Button>
         </div>
@@ -53,23 +59,6 @@ export function App() {
             </Button>
             
             <div className="flex items-center space-x-2">
-              {/* AI Model Selector */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex items-center">
-                    <span className="mr-2">AI Model: OpenAI</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>OpenAI</DropdownMenuItem>
-                  <DropdownMenuItem>Claude</DropdownMenuItem>
-                  <div className="p-2 border-t">
-                    <Button onClick={() => setAiDialogOpen(true)} variant="outline" size="sm" className="w-full">
-                      Configure AI Models
-                    </Button>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
               
               {/* Database Selector */}
               <DropdownMenu>
@@ -152,51 +141,7 @@ export function App() {
       </main>
 
       {/* Database Connection Dialog */}
-      <Dialog open={dbDialogOpen} onOpenChange={setDbDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Connect to Database</DialogTitle>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="connection-name" className="text-sm font-medium">Connection Name</label>
-              <Input id="connection-name" placeholder="My Database" />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="connection-host" className="text-sm font-medium">Host</label>
-              <Input id="connection-host" placeholder="localhost" />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="connection-port" className="text-sm font-medium">Port</label>
-              <Input id="connection-port" type="number" placeholder="5432" />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="connection-database" className="text-sm font-medium">Database Name</label>
-              <Input id="connection-database" placeholder="mydatabase" />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="connection-user" className="text-sm font-medium">Username</label>
-              <Input id="connection-user" placeholder="postgres" />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="connection-password" className="text-sm font-medium">Password</label>
-              <Input id="connection-password" type="password" placeholder="********" />
-            </div>
-          </div>
-          
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline">Test Connection</Button>
-            <Button variant="destructive">Delete Connection</Button>
-            <Button type="submit">Save Connection</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DBConnectionDialog dbDialogOpen={dbDialogOpen} setDbDialogOpen={setDbDialogOpen}/>
       
       {/* AI Configuration Dialog */}
       <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>

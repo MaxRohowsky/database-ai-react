@@ -24,5 +24,7 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
   sayHi: () => {
     console.log("hi");
     return "hi logged to console";
-  }
+  },
+  testConnection: (config) => electron.ipcRenderer.invoke("db:testConnection", config),
+  connectToDatabase: (config) => electron.ipcRenderer.invoke("db:connectToDatabase", config)
 });
