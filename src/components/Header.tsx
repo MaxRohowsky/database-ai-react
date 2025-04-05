@@ -24,10 +24,6 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header className=" shadow-md p-4 flex justify-between items-center">
       <div className="flex items-center">
-        <Button 
-        variant="default"
-        className="bg-gray-200 text-gray-800 hover:bg-gray-300"
-        >New Chat</Button>
 
         <h1 className="text-xl font-bold mr-4">Database AI</h1>
         <div className="relative mr-4">
