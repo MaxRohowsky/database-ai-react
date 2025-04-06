@@ -31,6 +31,7 @@ interface ChatStore {
   addMessageToCurrentChat: (message: Omit<ChatMessage, "id">) => void;
   updateMessage: (messageId: string, updates: Partial<ChatMessage>) => void;
   setChats: (chats: Chat[]) => void;
+  renameChat: (id: string, newTitle: string) => void;
 }
 
 // Storage constants
@@ -64,8 +65,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     // Save to storage
     saveChatsToPersistentStorage(get().chats);
   },
-
-
 
   deleteChat: (id) => {
     const { chats, currentChatId } = get();
@@ -101,7 +100,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     // Save to storage
     saveChatsToPersistentStorage(updatedChats);
   },
-
 
   getCurrentChat: () => {
     const { chats, currentChatId } = get();
@@ -175,6 +173,21 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           updatedAt: Date.now(),
           messages: updatedMessages,
         };
+      }
+      return chat;
+    });
+
+    set({ chats: updatedChats });
+
+    // Save to storage
+    saveChatsToPersistentStorage(updatedChats);
+  },
+
+  renameChat: (id, newTitle) => {
+    const { chats } = get();
+    const updatedChats = chats.map((chat) => {
+      if (chat.id === id) {
+        return { ...chat, title: newTitle };
       }
       return chat;
     });
