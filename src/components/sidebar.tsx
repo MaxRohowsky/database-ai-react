@@ -76,10 +76,10 @@ export const AppSidebar = () => {
 
   return (
     <>
-      <Sidebar>
+      <Sidebar className="drop-shadow-sm">
         <SidebarHeader>
           <div className="mb-4 flex items-center">
-            <h1 className="text-xl font-medium text-neutral-800">Talk2DB</h1>
+            <h1 className="text-xl font-medium text-neutral-800">OtterDB</h1>
           </div>
 
           <Button
