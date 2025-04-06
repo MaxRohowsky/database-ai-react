@@ -101,8 +101,8 @@ function setupIPC() {
       return await fetchDatabaseSchema(dbConfig);
     } catch (error) {
       console.error('Schema fetch error:', error);
-      return { 
-        error: error instanceof Error ? error.message : 'Unknown error fetching database schema' 
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error fetching database schema'
       };
     }
   });

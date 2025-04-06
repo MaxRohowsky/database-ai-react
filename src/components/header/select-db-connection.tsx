@@ -12,16 +12,16 @@ export default function DBConnectionDialog() {
     const [isLoading, setIsLoading] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">("idle");
     const [dbDialogOpen, setDbDialogOpen] = useState(false);
-    
-    const { 
-        connections, 
-        addConnection, 
-        updateConnection, 
+
+    const {
+        connections,
+        addConnection,
+        updateConnection,
         removeConnection,
         getSelectedConnection,
         setSelectedConnectionId
     } = useDbConnectionStore();
-    
+
     const selectedConnection = getSelectedConnection();
 
     // Add debugging log for component mount
@@ -88,7 +88,7 @@ export default function DBConnectionDialog() {
 
             // Add ID if it's a new connection
             const connectionId = formData.id || `conn-${Date.now()}`;
-            
+
             // Create the connection details object
             const connectionDetails: ConnectionDetails = {
                 ...formData,
@@ -101,7 +101,7 @@ export default function DBConnectionDialog() {
             if (connectionId && connections.some(c => c.id === connectionId)) {
                 // Update existing connection
                 const updatedConnection = updateConnection(connectionDetails);
-                
+
                 // If this is the currently selected connection, update it
                 if (selectedConnection?.id === connectionId) {
                     setSelectedConnectionId(updatedConnection.id);
@@ -109,7 +109,7 @@ export default function DBConnectionDialog() {
             } else {
                 // Add new connection
                 const newConnection = addConnection(connectionDetails);
-                
+
                 // Set as current connection
                 setSelectedConnectionId(newConnection.id);
             }
@@ -131,7 +131,7 @@ export default function DBConnectionDialog() {
             console.error('Failed to save connection:', error);
         }
     };
-    
+
     const handleSelectConnection = (connection: ConnectionDetails) => {
         console.log("Selected connection:", connection);
         setSelectedConnectionId(connection.id);
@@ -164,13 +164,13 @@ export default function DBConnectionDialog() {
             user: "postgres",
             password: "postgres"
         };
-        
+
         // Add to saved connections using the addConnection method
         const connection = addConnection(testConnection);
-        
+
         // Set as selected connection
         setSelectedConnectionId(connection.id);
-        
+
         // Log debug info
         console.log("Created test database connection:", connection);
     };
@@ -189,8 +189,8 @@ export default function DBConnectionDialog() {
                 <DropdownMenuContent align="end">
                     {connections.length > 0 ? (
                         connections.map(conn => (
-                            <DropdownMenuItem 
-                                key={conn.id} 
+                            <DropdownMenuItem
+                                key={conn.id}
                                 className="flex items-center justify-between cursor-pointer"
                                 onClick={() => handleSelectConnection(conn)}
                             >
@@ -220,7 +220,7 @@ export default function DBConnectionDialog() {
                     ) : (
                         <DropdownMenuItem disabled>No saved connections</DropdownMenuItem>
                     )}
-                    
+
                     <DropdownMenuItem
                         className="border-t mt-2 pt-2 justify-center"
                         onSelect={(e) => {

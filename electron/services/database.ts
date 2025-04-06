@@ -28,7 +28,7 @@ export async function testConnection(config: ConnectionDetails): Promise<boolean
       user: config.user,
       hasPassword: !!config.password
     });
-    
+
     connection = postgres({
       host: config.host,
       port: parseInt(config.port),
@@ -70,7 +70,7 @@ export async function executeQuery(config: ConnectionDetails, query: string): Pr
       database: config.database,
       user: config.user
     });
-    
+
     connection = postgres({
       host: config.host,
       port: parseInt(config.port),
@@ -155,7 +155,7 @@ export async function fetchDatabaseSchema(config: ConnectionDetails) {
 
     // Format schema information
     const tables: Record<string, Table> = {};
-    
+
     for (const row of result) {
       const tableKey = `${row.table_schema}.${row.table_name}`;
       if (!tables[tableKey]) {
@@ -165,7 +165,7 @@ export async function fetchDatabaseSchema(config: ConnectionDetails) {
           columns: []
         };
       }
-      
+
       tables[tableKey].columns.push({
         name: row.column_name,
         type: row.data_type,
@@ -176,16 +176,16 @@ export async function fetchDatabaseSchema(config: ConnectionDetails) {
 
     // Format as string for the AI model
     let schemaString = "Database Schema:\n\n";
-    
+
     for (const tableKey in tables) {
       const table = tables[tableKey];
       schemaString += `Table: ${table.schema}.${table.name}\n`;
       schemaString += `Columns:\n`;
-      
+
       for (const column of table.columns) {
         schemaString += `  - ${column.name} (${column.type}${column.nullable ? ', nullable' : ''})\n`;
       }
-      
+
       schemaString += `\n`;
     }
 

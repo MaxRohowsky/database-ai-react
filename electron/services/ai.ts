@@ -20,13 +20,13 @@ export interface AiResponse {
  * @returns {Promise<AiResponse>} AI-generated SQL query and explanation
  */
 export async function generateSqlQuery(
-  config: AiModelConfig, 
+  config: AiModelConfig,
   prompt: string,
   dbSchema?: string
 ): Promise<AiResponse> {
   try {
     console.log(`Generating SQL with provider: ${config.provider}, model: ${config.model}`);
-    
+
     // Only support OpenAI for now
     if (config.provider === 'openai') {
       return await generateWithOpenAI(config, prompt, dbSchema);
@@ -43,7 +43,7 @@ export async function generateSqlQuery(
 }
 
 async function generateWithOpenAI(
-  config: AiModelConfig, 
+  config: AiModelConfig,
   prompt: string,
   dbSchema?: string
 ): Promise<AiResponse> {
@@ -65,7 +65,7 @@ ${dbSchema ? `Use the following database schema information: ${dbSchema}` : ''}
 Return only the SQL query without any explanations. Make sure the SQL is valid and properly formatted.`;
 
     console.log(`Sending request to OpenAI with model: ${config.model}`);
-    
+
     const response = await openai.chat.completions.create({
       model: config.model,
       messages: [
@@ -76,34 +76,34 @@ Return only the SQL query without any explanations. Make sure the SQL is valid a
     });
 
     const sqlQuery = response.choices[0]?.message.content?.trim() || '';
-    
+
     if (!sqlQuery) {
       return {
         sqlQuery: '',
         error: 'The AI model did not generate any SQL query. Please try again.'
       };
     }
-    
+
     console.log('Successfully generated SQL query from OpenAI');
-    
+
     return {
       sqlQuery,
       explanation: response.choices[0]?.message.content || ''
     };
   } catch (err) {
     console.error('OpenAI API error:', err);
-    
+
     // Handle specific OpenAI errors
     if (err instanceof Error) {
       const errorMessage = err.message;
-      
+
       if (errorMessage.includes('API key')) {
         return {
           sqlQuery: '',
           error: 'Invalid OpenAI API key. Please check your API key and try again.'
         };
       }
-      
+
       if (errorMessage.includes('rate limit')) {
         return {
           sqlQuery: '',
@@ -111,7 +111,7 @@ Return only the SQL query without any explanations. Make sure the SQL is valid a
         };
       }
     }
-    
+
     return {
       sqlQuery: '',
       error: err instanceof Error ? err.message : 'Unknown error occurred when calling OpenAI API'
