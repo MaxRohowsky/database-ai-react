@@ -4,6 +4,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuAction,
   SidebarMenuButton,
@@ -76,12 +77,23 @@ export const AppSidebar = () => {
   return (
     <>
       <Sidebar>
-        <SidebarContent className="">
-          <Button className="w-full justify-start" onClick={createNewChat}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Chat
-          </Button>
+        <SidebarHeader className="border-b">
+          <div className="mb-4 flex items-center">
+            <h1 className="text-xl font-medium text-neutral-800">Talk2DB</h1>
+          </div>
 
+          <Button
+            variant="ghost"
+            className="flex w-full items-center justify-start bg-blue-50 px-2 hover:bg-blue-200"
+            onClick={createNewChat}
+          >
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-400">
+              <Plus className="h-3.5 w-3.5 text-white" />
+            </div>
+            New chat
+          </Button>
+        </SidebarHeader>
+        <SidebarContent className="">
           <SidebarMenu>
             <SidebarGroup>
               <SidebarGroupLabel className="text-black">
