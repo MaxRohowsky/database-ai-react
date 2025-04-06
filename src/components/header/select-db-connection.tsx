@@ -1,4 +1,4 @@
-import { useAddDbConnectionModal } from "@/components/header/add-db-connection-modal";
+import { useAddDbConnectionModal } from "@/components/add-db-connection-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,

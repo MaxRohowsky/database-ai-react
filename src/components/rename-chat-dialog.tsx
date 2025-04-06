@@ -1,5 +1,6 @@
 // src/components/RenameDialog.tsx
-import { useState } from "react";
+import { useChatStore } from "@/store/chat-store";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -11,29 +12,28 @@ import {
 import { Input } from "./ui/input";
 
 interface RenameDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  currentName: string;
-  onRename: (newName: string) => void;
+  showRenameChatDialog: boolean;
+  setShowRenameChatDialog: (showRenameChatDialog: boolean) => void;
+  chatToRename: { id: string; title: string };
 }
 
-export function RenameDialog({
-  open,
-  onOpenChange,
-  currentName,
-  onRename,
+function RenameChatDialog({
+  showRenameChatDialog,
+  setShowRenameChatDialog,
+  chatToRename,
 }: RenameDialogProps) {
-  const [name, setName] = useState(currentName);
+  const { renameChat } = useChatStore();
+  const [name, setName] = useState(chatToRename.title);
 
   const handleSave = () => {
     if (name.trim()) {
-      onRename(name.trim());
-      onOpenChange(false);
+      renameChat(chatToRename.id, name.trim());
+      setShowRenameChatDialog(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={showRenameChatDialog} onOpenChange={setShowRenameChatDialog}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Rename chat</DialogTitle>
@@ -56,7 +56,7 @@ export function RenameDialog({
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={() => setShowRenameChatDialog(false)}
           >
             Cancel
           </Button>
@@ -66,5 +66,33 @@ export function RenameDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function useRenameChatDialog() {
+  const [showRenameChatDialog, setShowRenameChatDialog] = useState(false);
+  const [chatToRename, setChatToRename] = useState<
+    { id: string; title: string } | undefined
+  >();
+
+  const RenameChatDialogCallback = useCallback(() => {
+    if (!chatToRename) return null;
+
+    return (
+      <RenameChatDialog
+        showRenameChatDialog={showRenameChatDialog}
+        setShowRenameChatDialog={setShowRenameChatDialog}
+        chatToRename={chatToRename}
+      />
+    );
+  }, [showRenameChatDialog, setShowRenameChatDialog, chatToRename]);
+
+  return useMemo(
+    () => ({
+      setShowRenameChatDialog,
+      setChatToRename,
+      RenameChatDialog: RenameChatDialogCallback,
+    }),
+    [setShowRenameChatDialog, RenameChatDialogCallback],
   );
 }

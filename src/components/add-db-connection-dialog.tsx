@@ -12,16 +12,16 @@ import {
   useState,
 } from "react";
 import { useForm } from "react-hook-form";
-import { Button } from "../ui/button";
+import { Button } from "./ui/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form";
-import { Input } from "../ui/input";
+} from "./ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "./ui/form";
+import { Input } from "./ui/input";
 
 function AddDbConnectionModal({
   showAddDbConnectionDialog,

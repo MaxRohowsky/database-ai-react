@@ -11,7 +11,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useChatManager } from "@/hooks/use-chat-manager";
 import { useChatStore } from "@/store/chat-store";
 import { useDbConnectionStore } from "@/store/db-connection-store";
 import {
@@ -23,7 +22,7 @@ import {
   Star,
   Trash2,
 } from "lucide-react";
-import { RenameDialog } from "./rename-chat-dialog";
+import { useRenameChatDialog } from "./rename-chat-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,17 +31,17 @@ import {
 } from "./ui/dropdown-menu";
 
 export const AppSidebar = () => {
-  const { chats, setCurrentChatId, createNewChat, favouriteChat } =
-    useChatStore();
-
   const {
-    renameDialogOpen,
-    setRenameDialogOpen,
-    chatToRename,
-    handleDeleteChat,
-    handleOpenRenameDialog,
-    handleRenameSubmit,
-  } = useChatManager();
+    chats,
+    setCurrentChatId,
+    createNewChat,
+    favouriteChat,
+    deleteChat,
+    renameChat,
+  } = useChatStore();
+
+  const { setShowRenameChatDialog, RenameChatDialog, setChatToRename } =
+    useRenameChatDialog();
 
   const { connections, getSelectedConnection, setSelectedConnectionId } =
     useDbConnectionStore();
@@ -52,10 +51,6 @@ export const AppSidebar = () => {
   const handleCreateChatWithConnection = (connectionId: string) => {
     setSelectedConnectionId(connectionId);
     createNewChat();
-  };
-
-  const handleSelectChat = (chatId: string) => {
-    setCurrentChatId(chatId);
   };
 
   // Filter chats into favourite and non-favourite
@@ -126,7 +121,7 @@ export const AppSidebar = () => {
                 favouriteChats.map((chat) => (
                   <SidebarMenuItem className="py-[0.5px]" key={chat.id}>
                     <SidebarMenuButton
-                      onClick={() => handleSelectChat(chat.id)}
+                      onClick={() => setCurrentChatId(chat.id)}
                     >
                       <span>{chat.title}</span>
                     </SidebarMenuButton>
@@ -144,14 +139,12 @@ export const AppSidebar = () => {
                           <span>Unfavourite</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={(e) => handleOpenRenameDialog(e, chat)}
+                          onClick={() => renameChat(chat.id, chat.title)}
                         >
                           <PenSquare className="mr-2 h-4 w-4" />
                           <span>Rename</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => handleDeleteChat(e, chat.id)}
-                        >
+                        <DropdownMenuItem onClick={() => deleteChat(chat.id)}>
                           <Trash2 className="mr-2 h-4 w-4" />
                           <span>Remove</span>
                         </DropdownMenuItem>
@@ -175,7 +168,7 @@ export const AppSidebar = () => {
                   recentChats.map((chat) => (
                     <SidebarMenuItem className="py-[0.5px]" key={chat.id}>
                       <SidebarMenuButton
-                        onClick={() => handleSelectChat(chat.id)}
+                        onClick={() => setCurrentChatId(chat.id)}
                       >
                         <span>{chat.title}</span>
                       </SidebarMenuButton>
@@ -193,14 +186,15 @@ export const AppSidebar = () => {
                             <span>Favourite</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={(e) => handleOpenRenameDialog(e, chat)}
+                            onClick={() => {
+                              setChatToRename(chat);
+                              setShowRenameChatDialog(true);
+                            }}
                           >
                             <PenSquare className="mr-2 h-4 w-4" />
                             <span>Rename</span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => handleDeleteChat(e, chat.id)}
-                          >
+                          <DropdownMenuItem onClick={() => deleteChat(chat.id)}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             <span>Remove</span>
                           </DropdownMenuItem>
@@ -219,14 +213,7 @@ export const AppSidebar = () => {
         </SidebarContent>
       </Sidebar>
 
-      {chatToRename && (
-        <RenameDialog
-          open={renameDialogOpen}
-          onOpenChange={setRenameDialogOpen}
-          currentName={chatToRename.title}
-          onRename={handleRenameSubmit}
-        />
-      )}
+      <RenameChatDialog />
     </>
   );
 };
