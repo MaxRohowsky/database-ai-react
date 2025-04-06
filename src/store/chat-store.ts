@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useDbConnectionStore } from "./db-connection-store";
 
 export interface ChatMessage {
   id: string;
@@ -6,6 +7,16 @@ export interface ChatMessage {
   content: string | Record<string, unknown>[];
   columns?: string[];
   error?: string;
+}
+
+export interface Chat {
+  id: string;
+  title: string;
+  createdAt: number;
+  updatedAt: number;
+  messages: ChatMessage[];
+  isFavourite: boolean;
+  dbConnectionId?: string;
 }
 
 /* export interface Chat {
@@ -48,6 +59,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   setChats: (chats) => set({ chats }),
 
   createNewChat: () => {
+    // Get the current selected database connection ID
+    const selectedConnectionId = useDbConnectionStore.getState().selectedConnectionId;
+
     const newChat: Chat = {
       id: Date.now().toString(),
       title: `New Chat ${get().chats.length + 1}`,
@@ -55,6 +69,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       updatedAt: Date.now(),
       messages: [],
       isFavourite: false,
+      dbConnectionId: selectedConnectionId || undefined // Fix the type error
     };
 
     set((state) => ({
