@@ -1,10 +1,10 @@
 interface ConnectionDetails {
-    name: string;
-    host: string;
-    port: string;
-    database: string;
-    user: string;
-    password: string;
+  name: string;
+  host: string;
+  port: string;
+  database: string;
+  user: string;
+  password: string;
 }
 
 interface ChatMessage {
@@ -21,6 +21,7 @@ interface Chat {
   createdAt: number;
   updatedAt: number;
   messages: ChatMessage[];
+  isFavourite: boolean;
 }
 
 interface AiModelConfig {
