@@ -24,6 +24,7 @@ export default function Chat() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const lastMessageRef = useRef<HTMLDivElement>(null);
     const [editingSqlId, setEditingSqlId] = useState<string | null>(null);
     const [editedSqlContent, setEditedSqlContent] = useState<string>("");
     
@@ -31,21 +32,63 @@ export default function Chat() {
     const currentChat = getCurrentChat();
     const messages = currentChat?.messages || [];
     
-    // Scroll to bottom when messages change or when loading completes
-    const scrollToBottom = () => {
+    // Enhanced scroll to bottom function with smoother behavior
+    const scrollToBottom = (behavior: ScrollBehavior = 'auto') => {
         if (scrollAreaRef.current) {
             scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
         }
+        
+        // Also try to scroll to the last message using the ref
+        if (lastMessageRef.current) {
+            lastMessageRef.current.scrollIntoView({ behavior, block: 'end' });
+        }
     };
     
+    // Scroll when messages or loading state changes
     useEffect(() => {
         scrollToBottom();
     }, [messages, isLoading]);
     
-    // Schedule another scroll after content has likely rendered
+    // Schedule multiple scrolls with different timings to handle various rendering scenarios
     useEffect(() => {
-        const timer = setTimeout(scrollToBottom, 100);
-        return () => clearTimeout(timer);
+        // Immediate scroll
+        scrollToBottom();
+        
+        // Delayed scrolls to handle different rendering times
+        const timers = [
+            setTimeout(() => scrollToBottom(), 100),
+            setTimeout(() => scrollToBottom('smooth'), 300),
+            setTimeout(() => scrollToBottom(), 500)
+        ];
+        
+        return () => timers.forEach(timer => clearTimeout(timer));
+    }, [messages]);
+    
+    // Set up intersection observer to detect when the last message is visible
+    useEffect(() => {
+        if (!lastMessageRef.current) return;
+        
+        const options = {
+            root: scrollAreaRef.current,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            const [entry] = entries;
+            if (!entry.isIntersecting) {
+                // If the last message is not visible, scroll to it
+                scrollToBottom('smooth');
+            }
+        }, options);
+        
+        observer.observe(lastMessageRef.current);
+        
+        return () => {
+            if (lastMessageRef.current) {
+                observer.unobserve(lastMessageRef.current);
+            }
+        };
     }, [messages]);
 
     // Function to start editing SQL
@@ -87,6 +130,9 @@ export default function Chat() {
         
         const userQuery = inputValue.trim();
         setInputValue("");
+        
+        // Ensure scroll happens after adding the message
+        setTimeout(scrollToBottom, 50);
         
         try {
             // Get database schema if a connection is configured
@@ -136,11 +182,16 @@ export default function Chat() {
                 type: 'sql',
                 content: sqlResponse.sqlQuery
             });
+            
+            // Ensure scroll after SQL generation
+            setTimeout(scrollToBottom, 50);
         } catch (err) {
             console.error("SQL generation error:", err);
             setError(err instanceof Error ? err.message : 'An error occurred generating SQL');
         } finally {
             setIsLoading(false);
+            // Final scroll after loading completes
+            setTimeout(scrollToBottom, 50);
         }
     };
     
@@ -194,11 +245,16 @@ export default function Chat() {
                 content: result.rows || [],
                 columns: result.columns || []
             });
+            
+            // Ensure scroll after query execution
+            setTimeout(scrollToBottom, 50);
         } catch (err) {
             console.error("SQL execution error:", err);
             setError(err instanceof Error ? err.message : 'An error occurred executing SQL');
         } finally {
             setIsLoading(false);
+            // Final scroll after loading completes
+            setTimeout(scrollToBottom, 50);
         }
     };
 
@@ -263,7 +319,7 @@ export default function Chat() {
         <div className="flex flex-col h-full overflow-hidden">
             {/* Chat Area */}
             <ScrollArea className="flex-grow p-4 overflow-y-auto" ref={scrollAreaRef}>
-                <div className="space-y-4 max-w-4xl mx-auto">
+                <div className="space-y-4 max-w-7xl mx-auto">
                     {/* Error Message */}
                     {error && (
                         <Card className="bg-red-50 border-red-200">
@@ -275,11 +331,18 @@ export default function Chat() {
                     )}
                     
                     {/* Chat Messages */}
-                    {messages.map((message) => {
+                    {messages.map((message, index) => {
+                        // Determine if this is the last message for ref attachment
+                        const isLastMessage = index === messages.length - 1;
+                        
                         if (message.type === 'user') {
                             // User Message
                             return (
-                                <Card key={message.id} className="bg-muted/50">
+                                <Card 
+                                    key={message.id} 
+                                    className="bg-muted/50"
+                                    ref={isLastMessage ? lastMessageRef : undefined}
+                                >
                                     <CardContent className="pt-4">
                                         <p>{message.content as string}</p>
                                     </CardContent>
@@ -288,7 +351,10 @@ export default function Chat() {
                         } else if (message.type === 'sql') {
                             // SQL Message
                             return (
-                                <Card key={message.id}>
+                                <Card 
+                                    key={message.id}
+                                    ref={isLastMessage ? lastMessageRef : undefined}
+                                >
                                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
                                         <h3 className="text-sm font-medium">Generated SQL</h3>
                                         {editingSqlId !== message.id && (
@@ -366,7 +432,10 @@ export default function Chat() {
                         } else if (message.type === 'result') {
                             // Result Message
                             return (
-                                <Card key={message.id}>
+                                <Card 
+                                    key={message.id}
+                                    ref={isLastMessage ? lastMessageRef : undefined}
+                                >
                                     <CardHeader className="pb-2">
                                         <h3 className="text-sm font-medium">Results after running query</h3>
                                     </CardHeader>
@@ -411,6 +480,9 @@ export default function Chat() {
                             <p>Enter a natural language query to generate SQL and query your database.</p>
                         </div>
                     )}
+                    
+                    {/* Invisible element at the bottom to scroll to */}
+                    <div ref={lastMessageRef} className="h-0.5 w-full" />
                 </div>
             </ScrollArea>
 
