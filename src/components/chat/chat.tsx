@@ -31,11 +31,21 @@ export default function Chat() {
     const currentChat = getCurrentChat();
     const messages = currentChat?.messages || [];
     
-    // Scroll to bottom when messages change
-    useEffect(() => {
+    // Scroll to bottom when messages change or when loading completes
+    const scrollToBottom = () => {
         if (scrollAreaRef.current) {
             scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
         }
+    };
+    
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, isLoading]);
+    
+    // Schedule another scroll after content has likely rendered
+    useEffect(() => {
+        const timer = setTimeout(scrollToBottom, 100);
+        return () => clearTimeout(timer);
     }, [messages]);
 
     // Function to start editing SQL
@@ -250,9 +260,9 @@ export default function Chat() {
     }, [editingSqlId, editedSqlContent]);
 
     return (
-        <>
+        <div className="flex flex-col h-full overflow-hidden">
             {/* Chat Area */}
-            <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+            <ScrollArea className="flex-grow p-4 overflow-y-auto" ref={scrollAreaRef}>
                 <div className="space-y-4 max-w-4xl mx-auto">
                     {/* Error Message */}
                     {error && (
@@ -404,8 +414,8 @@ export default function Chat() {
                 </div>
             </ScrollArea>
 
-            {/* Input Area */}
-            <div className="border-t border-border p-4">
+            {/* Input Area - Fixed at the bottom */}
+            <div className="border-t border-border p-4 flex-shrink-0">
                 <div className="max-w-4xl mx-auto flex">
                     <Textarea
                         className="min-h-[80px] flex-1 resize-none"
@@ -431,7 +441,7 @@ export default function Chat() {
                     </Button>
                 </div>
             </div>
-        </>
+        </div>
     )
 }
 
