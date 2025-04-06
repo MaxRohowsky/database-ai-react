@@ -1,7 +1,7 @@
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import { Plus, Trash2 } from 'lucide-react';
-import { useChatStore } from '@/store/chatStore';
+import { useChatStore } from '@/store/chat-store';
 
 // Helper function to format date
 const formatDate = (timestamp: number): string => {

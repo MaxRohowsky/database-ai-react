@@ -1,5 +1,5 @@
-import { AiModelConfig } from '@/store/aiConfigStore';
-import { ConnectionDetails } from '@/store/dbConnectionStore';
+import { AiModelConfig } from '@/store/ai-config-store';
+import { ConnectionDetails } from '@/store/db-connection-store';
 
 // Function to generate SQL using AI
 export async function generateSql(query: string, aiConfig: AiModelConfig, dbSchema?: string): Promise<{

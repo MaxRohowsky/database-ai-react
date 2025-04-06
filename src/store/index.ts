@@ -1,10 +1,10 @@
-import { initializeChatStore } from './chatStore';
-import { initializeDbConnectionStore } from './dbConnectionStore';
-import { initializeAiConfigStore } from './aiConfigStore';
+import { initializeChatStore } from './chat-store';
+import { initializeDbConnectionStore } from './db-connection-store';
+import { initializeAiConfigStore } from './ai-config-store';
 
-export * from './chatStore';
-export * from './dbConnectionStore';
-export * from './aiConfigStore';
+export * from './chat-store';
+export * from './db-connection-store';
+export * from './ai-config-store';
 
 export async function initializeStores() {
   // Initialize all stores in parallel

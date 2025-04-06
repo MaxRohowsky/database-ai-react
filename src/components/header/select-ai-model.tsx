@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { useState, useEffect } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Settings, Check } from "lucide-react";
-import { useAiConfigStore } from "@/store/aiConfigStore";
+import { useAiConfigStore } from "@/store/ai-config-store";
 
 // Define supported AI models - focusing only on OpenAI models
 const aiModels = [

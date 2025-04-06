@@ -4,9 +4,9 @@ import { Button } from "../ui/button"
 import { ScrollArea } from "../ui/scroll-area"
 import { Textarea } from "../ui/textarea"
 import { AlertCircle, Send, Play, Loader2, Edit } from "lucide-react"
-import { useChatStore } from "@/store/chatStore"
-import { useAiConfigStore } from "@/store/aiConfigStore"
-import { useDbConnectionStore } from "@/store/dbConnectionStore"
+import { useChatStore } from "@/store/chat-store"
+import { useAiConfigStore } from "@/store/ai-config-store"
+import { useDbConnectionStore } from "@/store/db-connection-store"
 import { generateSql, executeSqlQuery, fetchDatabaseSchema } from "@/services/sqlService"
 
 export default function Chat() {

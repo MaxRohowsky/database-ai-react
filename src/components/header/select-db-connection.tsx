@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { Loader2, CheckCircle, XCircle, Database, Trash2, Pencil, Bug } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { useDbConnectionStore, ConnectionDetails } from "@/store/dbConnectionStore";
+import { useDbConnectionStore, ConnectionDetails } from "@/store/db-connection-store";
 
 export default function DBConnectionDialog() {
     const [isLoading, setIsLoading] = useState(false);

@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { Send } from "lucide-react";
-import { useChatStore } from "@/store/chatStore";
-import { useAiConfigStore } from "@/store/aiConfigStore";
-import { useDbConnectionStore } from "@/store/dbConnectionStore";
+import { useChatStore } from "@/store/chat-store";
+import { useAiConfigStore } from "@/store/ai-config-store";
+import { useDbConnectionStore } from "@/store/db-connection-store";
 import { generateSql, fetchDatabaseSchema } from "@/services/sqlService";
 
 export default function ChatInput() {
