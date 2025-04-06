@@ -31,17 +31,9 @@ import {
 } from "./ui/dropdown-menu";
 
 export const AppSidebar = () => {
-  const {
-    chats,
-    setCurrentChatId,
-    createNewChat,
-    favouriteChat,
-    deleteChat,
-    renameChat,
-  } = useChatStore();
+  const { chats, setCurrentChatId, createNewChat } = useChatStore();
 
-  const { setShowRenameChatDialog, RenameChatDialog, setChatToRename } =
-    useRenameChatDialog();
+  const { RenameChatDialog } = useRenameChatDialog();
 
   const { connections, getSelectedConnection, setSelectedConnectionId } =
     useDbConnectionStore();
@@ -114,42 +106,28 @@ export const AppSidebar = () => {
           <SidebarMenu>
             <SidebarGroup>
               <SidebarGroupLabel className="text-black">
-                <Star className="mr-2 h-4 w-4 fill-amber-500 text-amber-500" />
-                Favourites
+                <div className="mr-2 flex h-7 w-7 items-center justify-center rounded-lg border border-amber-100 bg-amber-50 shadow-sm">
+                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                </div>
+                <span className="text-sm font-medium">Favourites</span>
               </SidebarGroupLabel>
               {favouriteChats.length > 0 ? (
                 favouriteChats.map((chat) => (
                   <SidebarMenuItem className="py-[0.5px]" key={chat.id}>
                     <SidebarMenuButton
                       onClick={() => setCurrentChatId(chat.id)}
+                      className="rounded-md transition-colors hover:bg-gray-50"
                     >
-                      <span>{chat.title}</span>
+                      <div className="flex items-center">
+                        <div className="mr-2 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
+                          <MessageCircle className="h-3 w-3 text-blue-500" />
+                        </div>
+                        <span className="truncate font-medium text-gray-700">
+                          {chat.title}
+                        </span>
+                      </div>
                     </SidebarMenuButton>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <SidebarMenuAction>
-                          <MoreHorizontal />
-                        </SidebarMenuAction>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent side="right" align="start">
-                        <DropdownMenuItem
-                          onClick={() => favouriteChat(chat.id)}
-                        >
-                          <Star className="mr-2 h-4 w-4" />
-                          <span>Unfavourite</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => renameChat(chat.id, chat.title)}
-                        >
-                          <PenSquare className="mr-2 h-4 w-4" />
-                          <span>Rename</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => deleteChat(chat.id)}>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          <span>Remove</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <ChatItemDropdown chat={chat} />
                   </SidebarMenuItem>
                 ))
               ) : (
@@ -160,46 +138,24 @@ export const AppSidebar = () => {
             </SidebarGroup>
             <SidebarGroup>
               <SidebarGroupLabel className="text-black">
-                <MessageCircle className="mr-2 h-4 w-4" />
-                Recent Chats
+                <div className="mr-2 flex h-7 w-7 items-center justify-center rounded-lg border border-blue-100 bg-blue-50 shadow-sm">
+                  <MessageCircle className="h-3.5 w-3.5 text-blue-500" />
+                </div>
+                <span className="text-sm font-medium">Recent Chats</span>
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 {recentChats.length > 0 ? (
                   recentChats.map((chat) => (
-                    <SidebarMenuItem className="py-[0.5px]" key={chat.id}>
+                    <SidebarMenuItem
+                      className="ml-5 border-l px-2 py-[0.5px]"
+                      key={chat.id}
+                    >
                       <SidebarMenuButton
                         onClick={() => setCurrentChatId(chat.id)}
                       >
                         <span>{chat.title}</span>
                       </SidebarMenuButton>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <SidebarMenuAction>
-                            <MoreHorizontal />
-                          </SidebarMenuAction>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent side="right" align="start">
-                          <DropdownMenuItem
-                            onClick={() => favouriteChat(chat.id)}
-                          >
-                            <Star className="mr-2 h-4 w-4 text-amber-500" />
-                            <span>Favourite</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setChatToRename(chat);
-                              setShowRenameChatDialog(true);
-                            }}
-                          >
-                            <PenSquare className="mr-2 h-4 w-4" />
-                            <span>Rename</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => deleteChat(chat.id)}>
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            <span>Remove</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <ChatItemDropdown chat={chat} />
                     </SidebarMenuItem>
                   ))
                 ) : (
@@ -217,3 +173,38 @@ export const AppSidebar = () => {
     </>
   );
 };
+
+function ChatItemDropdown({ chat }: { chat: Chat }) {
+  const { setShowRenameChatDialog, setChatToRename } = useRenameChatDialog();
+
+  const { favouriteChat, deleteChat } = useChatStore();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <SidebarMenuAction>
+          <MoreHorizontal />
+        </SidebarMenuAction>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="right" align="start">
+        <DropdownMenuItem onClick={() => favouriteChat(chat.id)}>
+          <Star className="mr-2 h-4 w-4 text-amber-500" />
+          <span>Favourite</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            setChatToRename(chat);
+            setShowRenameChatDialog(true);
+          }}
+        >
+          <PenSquare className="mr-2 h-4 w-4" />
+          <span>Rename</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => deleteChat(chat.id)}>
+          <Trash2 className="mr-2 h-4 w-4" />
+          <span>Remove</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
