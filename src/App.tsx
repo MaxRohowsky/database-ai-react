@@ -10,8 +10,10 @@ export function App() {
 
       {/* Main Content */}
       <main className="flex flex-1 flex-col overflow-hidden">
-        <SidebarTrigger />
-        <Header />
+        <div className="flex w-full items-center justify-between border-b">
+          <SidebarTrigger className="bg-secondary m-4 h-8 w-8" />
+          <Header />
+        </div>
         <Chat />
       </main>
     </SidebarProvider>
