@@ -31,13 +31,7 @@ import {
 } from "./ui/dropdown-menu";
 
 export const AppSidebar = () => {
-  const { chats, setCurrentChatId } = useChatStore();
-
   const { RenameChatDialog } = useRenameChatDialog();
-
-  // Filter chats into favourite and non-favourite
-  const favouriteChats = chats.filter((chat) => chat.isFavourite);
-  const recentChats = chats.filter((chat) => !chat.isFavourite);
 
   return (
     <>
@@ -50,67 +44,8 @@ export const AppSidebar = () => {
         <NewChatButton />
         <SidebarContent className="">
           <SidebarMenu>
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-black">
-                <div className="mr-2 flex h-7 w-7 items-center justify-center rounded-lg border border-amber-100 bg-amber-50 shadow-sm">
-                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                </div>
-                <span className="text-sm font-medium">Favourites</span>
-              </SidebarGroupLabel>
-              {favouriteChats.length > 0 ? (
-                favouriteChats.map((chat) => (
-                  <SidebarMenuItem className="py-[0.5px]" key={chat.id}>
-                    <SidebarMenuButton
-                      onClick={() => setCurrentChatId(chat.id)}
-                      className="rounded-md transition-colors hover:bg-gray-50"
-                    >
-                      <div className="flex items-center">
-                        <div className="mr-2 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
-                          <MessageCircle className="h-3 w-3 text-blue-500" />
-                        </div>
-                        <span className="truncate font-medium text-gray-700">
-                          {chat.title}
-                        </span>
-                      </div>
-                    </SidebarMenuButton>
-                    <ChatItemDropdown chat={chat} />
-                  </SidebarMenuItem>
-                ))
-              ) : (
-                <div className="text-muted-foreground px-3 py-2 text-sm">
-                  No favourites yet
-                </div>
-              )}
-            </SidebarGroup>
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-black">
-                <div className="mr-2 flex h-7 w-7 items-center justify-center rounded-lg border border-blue-100 bg-blue-50 shadow-sm">
-                  <MessageCircle className="h-3.5 w-3.5 text-blue-500" />
-                </div>
-                <span className="text-sm font-medium">Recent Chats</span>
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                {recentChats.length > 0 ? (
-                  recentChats.map((chat) => (
-                    <SidebarMenuItem
-                      className="ml-5 border-l px-2 py-[0.5px]"
-                      key={chat.id}
-                    >
-                      <SidebarMenuButton
-                        onClick={() => setCurrentChatId(chat.id)}
-                      >
-                        <span>{chat.title}</span>
-                      </SidebarMenuButton>
-                      <ChatItemDropdown chat={chat} />
-                    </SidebarMenuItem>
-                  ))
-                ) : (
-                  <div className="text-muted-foreground px-3 py-2 text-sm">
-                    No recent chats
-                  </div>
-                )}
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <FavouriteChats />
+            <RecentChats />
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
@@ -213,5 +148,80 @@ function NewChatButton() {
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+function FavouriteChats() {
+  const { chats, setCurrentChatId } = useChatStore();
+  const favouriteChats = chats.filter((chat) => chat.isFavourite);
+
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel className="text-black">
+        <div className="mr-2 flex h-7 w-7 items-center justify-center rounded-lg border border-amber-100 bg-amber-50 shadow-sm">
+          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+        </div>
+        <span className="text-sm font-medium">Favourites</span>
+      </SidebarGroupLabel>
+      {favouriteChats.length > 0 ? (
+        favouriteChats.map((chat) => (
+          <SidebarMenuItem className="py-[0.5px]" key={chat.id}>
+            <SidebarMenuButton
+              onClick={() => setCurrentChatId(chat.id)}
+              className="rounded-md transition-colors hover:bg-gray-50"
+            >
+              <div className="flex items-center">
+                <div className="mr-2 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
+                  <MessageCircle className="h-3 w-3 text-blue-500" />
+                </div>
+                <span className="truncate font-medium text-gray-700">
+                  {chat.title}
+                </span>
+              </div>
+            </SidebarMenuButton>
+            <ChatItemDropdown chat={chat} />
+          </SidebarMenuItem>
+        ))
+      ) : (
+        <div className="text-muted-foreground px-3 py-2 text-sm">
+          No favourites yet
+        </div>
+      )}
+    </SidebarGroup>
+  );
+}
+
+function RecentChats() {
+  const { chats, setCurrentChatId } = useChatStore();
+  const recentChats = chats.filter((chat) => !chat.isFavourite);
+
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel className="text-black">
+        <div className="mr-2 flex h-7 w-7 items-center justify-center rounded-lg border border-blue-100 bg-blue-50 shadow-sm">
+          <MessageCircle className="h-3.5 w-3.5 text-blue-500" />
+        </div>
+        <span className="text-sm font-medium">Recent Chats</span>
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        {recentChats.length > 0 ? (
+          recentChats.map((chat) => (
+            <SidebarMenuItem
+              className="ml-5 border-l px-2 py-[0.5px]"
+              key={chat.id}
+            >
+              <SidebarMenuButton onClick={() => setCurrentChatId(chat.id)}>
+                <span>{chat.title}</span>
+              </SidebarMenuButton>
+              <ChatItemDropdown chat={chat} />
+            </SidebarMenuItem>
+          ))
+        ) : (
+          <div className="text-muted-foreground px-3 py-2 text-sm">
+            No recent chats
+          </div>
+        )}
+      </SidebarGroupContent>
+    </SidebarGroup>
   );
 }
