@@ -21,7 +21,7 @@ export default function Header() {
     useRenameChatDialog();
 
   return (
-    <div className="flex w-full flex-shrink-0 items-center justify-between">
+    <div className="flex w-full flex-shrink-0 items-center justify-between border-b">
       <SidebarTrigger className="bg-secondary m-4 h-8 w-8" />
       <div className="flex w-full items-center justify-between p-4">
         <div className="flex items-center space-x-4">

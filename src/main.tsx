@@ -10,7 +10,7 @@ initializeStores().then(() => {
   ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
       <App />
-      <Toaster position="top-right" />
+      <Toaster position="bottom-right" />
     </React.StrictMode>,
   );
 });

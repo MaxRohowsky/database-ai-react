@@ -5,7 +5,7 @@ import { ChatInput } from "@/features/chat/chat-input";
 import { useChatStore } from "@/store/chat-store";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
+import { SidebarProvider } from "./components/ui/sidebar";
 
 export function App() {
   const { currentChatId, getCurrentChat, createNewChat } = useChatStore();
@@ -31,35 +31,30 @@ export function App() {
   }, [error]);
 
   return (
-    <SidebarProvider className="border-t">
-      <AppSidebar />
+    <div className="relative flex h-screen w-full">
+      <SidebarProvider className="absolute inset-0">
+        <AppSidebar />
 
-      {/* Main Content - Fixed structure with scrollable middle */}
-      <main className="flex h-screen flex-1 flex-col overflow-hidden">
-        {/* Header - Fixed at top */}
-        <div className="flex w-full flex-shrink-0 items-center justify-between">
-          <SidebarTrigger className="bg-secondary m-4 h-8 w-8" />
+        <main className="ml-0 flex h-screen w-full flex-col">
           <Header />
-        </div>
 
-        {/* Chat - Scrollable area in the middle */}
-        <div className="flex-1 overflow-y-auto">
-          <Chat
-            messages={messages}
+          <div className="flex-1 overflow-y-auto">
+            <Chat
+              messages={messages}
+              isLoading={isLoading}
+              setError={setError}
+              setIsLoading={setIsLoading}
+            />
+          </div>
+
+          <ChatInput
             isLoading={isLoading}
             setError={setError}
             setIsLoading={setIsLoading}
           />
-        </div>
-
-        {/* Chat Input - Fixed at bottom */}
-        <ChatInput
-          isLoading={isLoading}
-          setError={setError}
-          setIsLoading={setIsLoading}
-        />
-      </main>
-    </SidebarProvider>
+        </main>
+      </SidebarProvider>
+    </div>
   );
 }
 
