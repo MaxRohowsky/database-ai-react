@@ -40,12 +40,18 @@ interface SQLExecutionResponse {
   error?: string;
 }
 
+interface DbSchemaResponse {
+  schema?: string;
+  error?: string;
+}
+
 interface Window {
   electronAPI: {
     sayHi: () => string;
     testConnection: (config: ConnectionDetails) => Promise<boolean>;
     generateSQL: (aiConfig: AiModelConfig, prompt: string, dbSchema?: string) => Promise<SQLGenerationResponse>;
     executeSQL: (dbConfig: ConnectionDetails, query: string) => Promise<SQLExecutionResponse>;
+    fetchDbSchema: (dbConfig: ConnectionDetails) => Promise<DbSchemaResponse>;
     saveChats: (chats: Chat[]) => Promise<{ success: boolean }>;
     loadChats: () => Promise<Chat[]>;
   }

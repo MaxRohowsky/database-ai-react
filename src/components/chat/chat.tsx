@@ -4,7 +4,7 @@ import { Button } from "../ui/button"
 import { ScrollArea } from "../ui/scroll-area"
 import { Textarea } from "../ui/textarea"
 import { useAppContext } from "@/context-provider"
-import { AlertCircle, Send, Play, Loader2 } from "lucide-react"
+import { AlertCircle, Send, Play, Loader2, Edit } from "lucide-react"
 import { useAiModelConfig } from "@/hooks/useAiModelConfig"
 import { useSelectedDbConnection } from "@/hooks/useSelectedDbConnection"
 
@@ -13,7 +13,8 @@ export default function Chat() {
         currentChatId, 
         getCurrentChat, 
         addMessageToCurrentChat,
-        createNewChat
+        createNewChat,
+        updateMessage
     } = useAppContext();
     
     const { aiConfig } = useAiModelConfig();
@@ -23,6 +24,8 @@ export default function Chat() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const [editingSqlId, setEditingSqlId] = useState<string | null>(null);
+    const [editedSqlContent, setEditedSqlContent] = useState<string>("");
     
     // Get the current chat's messages
     const currentChat = getCurrentChat();
@@ -34,6 +37,25 @@ export default function Chat() {
             scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
         }
     }, [messages]);
+
+    // Function to start editing SQL
+    const startEditingSql = (messageId: string, content: string) => {
+        setEditingSqlId(messageId);
+        setEditedSqlContent(content);
+    };
+
+    // Function to save edited SQL
+    const saveEditedSql = (messageId: string) => {
+        if (!editedSqlContent.trim()) return;
+        
+        // Update the message using the context function
+        updateMessage(messageId, {
+            content: editedSqlContent
+        });
+        
+        // End editing mode
+        setEditingSqlId(null);
+    };
     
     // Function to handle form submission
     const handleSubmit = async () => {
@@ -57,16 +79,36 @@ export default function Chat() {
         setInputValue("");
         
         try {
+            // Get database schema if a connection is configured
+            let dbSchema: string | undefined = undefined;
+            if (dbConfig) {
+                try {
+                    console.log("Fetching database schema for context...");
+                    const schemaResult = await window.electronAPI.fetchDbSchema(dbConfig);
+                    if (schemaResult && !schemaResult.error) {
+                        dbSchema = schemaResult.schema;
+                        console.log("Successfully fetched database schema");
+                    } else if (schemaResult.error) {
+                        console.warn("Failed to fetch schema:", schemaResult.error);
+                    }
+                } catch (schemaErr) {
+                    console.warn("Error fetching database schema:", schemaErr);
+                    // Continue without schema, don't block SQL generation
+                }
+            }
+            
             console.log("Generating SQL with config:", JSON.stringify({
                 provider: aiConfig.provider,
                 model: aiConfig.model,
-                apiKeyLength: aiConfig.apiKey ? aiConfig.apiKey.length : 0
+                apiKeyLength: aiConfig.apiKey ? aiConfig.apiKey.length : 0,
+                hasSchema: !!dbSchema
             }));
             
             // Generate SQL with AI
             const sqlResponse = await window.electronAPI.generateSQL(
                 aiConfig, 
-                userQuery
+                userQuery,
+                dbSchema
             );
             
             console.log("SQL Response:", JSON.stringify(sqlResponse));
@@ -150,12 +192,62 @@ export default function Chat() {
         }
     };
 
+    // Force enable execution - useful for debugging
+    const forceEnableExecution = (event: React.MouseEvent, sqlQuery: string) => {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        console.log("FORCE EXECUTING SQL, bypassing disabled state");
+        console.log("Current dbConfig status:", !!dbConfig);
+        
+        if (dbConfig) {
+            console.log("Database config details:", {
+                host: dbConfig.host,
+                port: dbConfig.port,
+                database: dbConfig.database,
+                user: dbConfig.user,
+                hasPassword: !!dbConfig.password
+            });
+        } else {
+            console.log("No database config available. Creating a test config for debugging");
+            const testConfig = {
+                host: "localhost",
+                port: "5432",
+                database: "postgres",
+                user: "postgres", 
+                password: "postgres",
+                name: "Test Database"
+            };
+            console.log("Using test config:", testConfig);
+            executeQuery(sqlQuery);
+        }
+        
+        // Execute the query
+        if (dbConfig) {
+            executeQuery(sqlQuery);
+        }
+    };
+
     // Create a new chat if none exists
     useEffect(() => {
         if (!currentChatId) {
             createNewChat();
         }
     }, [currentChatId, createNewChat]);
+
+    // Handle clicks outside of the SQL editing area
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (editingSqlId && !(event.target as Element).closest('.sql-edit-area')) {
+                saveEditedSql(editingSqlId);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [editingSqlId, editedSqlContent]);
 
     return (
         <>
@@ -187,18 +279,52 @@ export default function Chat() {
                             // SQL Message
                             return (
                                 <Card key={message.id}>
-                                    <CardHeader className="pb-2">
+                                    <CardHeader className="pb-2 flex flex-row items-center justify-between">
                                         <h3 className="text-sm font-medium">Generated SQL</h3>
+                                        {editingSqlId !== message.id && (
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon"
+                                                onClick={() => startEditingSql(message.id, message.content as string)}
+                                                className="h-6 w-6"
+                                            >
+                                                <Edit className="h-3.5 w-3.5" />
+                                            </Button>
+                                        )}
                                     </CardHeader>
                                     <CardContent>
-                                        <pre className="bg-muted p-4 rounded-md text-sm overflow-auto">
-                                            {message.content as string}
-                                        </pre>
+                                        {editingSqlId === message.id ? (
+                                            <Textarea
+                                                className="sql-edit-area font-mono text-sm min-h-[100px] bg-muted"
+                                                value={editedSqlContent}
+                                                onChange={(e) => setEditedSqlContent(e.target.value)}
+                                                autoFocus
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Escape') {
+                                                        setEditingSqlId(null);
+                                                    } else if (e.key === 'Enter' && e.ctrlKey) {
+                                                        saveEditedSql(message.id);
+                                                    }
+                                                }}
+                                            />
+                                        ) : (
+                                            <pre 
+                                                className="bg-muted p-4 rounded-md text-sm overflow-auto cursor-pointer"
+                                                onClick={() => startEditingSql(message.id, message.content as string)}
+                                            >
+                                                {message.content as string}
+                                            </pre>
+                                        )}
                                     </CardContent>
                                     <CardFooter>
                                         <Button 
-                                            onClick={() => executeQuery(message.content as string)}
+                                            onClick={() => executeQuery(
+                                                editingSqlId === message.id 
+                                                    ? editedSqlContent 
+                                                    : message.content as string
+                                            )}
                                             disabled={!dbConfig || isLoading}
+                                            className="mr-2"
                                         >
                                             {isLoading ? (
                                                 <>
@@ -211,6 +337,18 @@ export default function Chat() {
                                                     Execute
                                                 </>
                                             )}
+                                        </Button>
+                                        <Button 
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={(e) => forceEnableExecution(
+                                                e,
+                                                editingSqlId === message.id 
+                                                    ? editedSqlContent 
+                                                    : message.content as string
+                                            )}
+                                        >
+                                            Force Execute
                                         </Button>
                                     </CardFooter>
                                 </Card>

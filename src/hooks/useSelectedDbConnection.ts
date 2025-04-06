@@ -1,12 +1,14 @@
 // useConnectionManager.ts
 import { useState, useEffect } from 'react';
-import { ConnectionDetails } from './useDbConnections';
+import { ConnectionDetails, DB_CONNECTIONS_STORAGE_KEY } from './useDbConnections';
 
 const ACTIVE_CONNECTION_ID_KEY = 'activeConnectionId';
 
 export function useSelectedDbConnection() {
   const [selectedConnection, setSelectedConnectionState] = useState<ConnectionDetails | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  // Load selected connection from localStorage on mount
   useEffect(() => {
     const loadSelectedConnection = () => {
       try {
@@ -18,35 +20,57 @@ export function useSelectedDbConnection() {
         
         if (!activeConnectionId) {
           console.log("No active connection ID found in localStorage");
+          setIsLoaded(true);
           return;
         }
         
         // Get all connections
-        const savedConnectionsJson = localStorage.getItem('databaseConnections');
+        const savedConnectionsJson = localStorage.getItem(DB_CONNECTIONS_STORAGE_KEY);
         if (!savedConnectionsJson) {
           console.log("No saved connections found in localStorage");
+          setIsLoaded(true);
           return;
         }
         
-        const savedConnections = JSON.parse(savedConnectionsJson) as ConnectionDetails[];
-        console.log(`Found ${savedConnections.length} saved connections`);
-        
-        // Find the active connection by ID
-        const activeConnection = savedConnections.find(conn => conn.id === activeConnectionId);
-        if (activeConnection) {
-          console.log("Setting active connection:", activeConnection.name);
-          setSelectedConnectionState(activeConnection);
-        } else {
-          console.log(`Active connection with ID ${activeConnectionId} not found in saved connections`);
-          // If the selected connection doesn't exist anymore, clear the active ID
+        try {
+          const savedConnections = JSON.parse(savedConnectionsJson) as ConnectionDetails[];
+          console.log(`Found ${savedConnections.length} saved connections`);
+          
+          // Find the active connection by ID
+          const activeConnection = savedConnections.find(conn => conn.id === activeConnectionId);
+          if (activeConnection) {
+            console.log("Setting active connection:", activeConnection.name);
+            setSelectedConnectionState(activeConnection);
+          } else {
+            console.log(`Active connection with ID ${activeConnectionId} not found in saved connections`);
+            // If the selected connection doesn't exist anymore, clear the active ID
+            localStorage.removeItem(ACTIVE_CONNECTION_ID_KEY);
+          }
+        } catch (parseError) {
+          console.error('Failed to parse saved connections JSON:', parseError);
           localStorage.removeItem(ACTIVE_CONNECTION_ID_KEY);
         }
       } catch (error) {
         console.error('Failed to load selected database connection:', error);
+      } finally {
+        setIsLoaded(true);
       }
     };
     
     loadSelectedConnection();
+    
+    // Add event listener for localStorage changes
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === DB_CONNECTIONS_STORAGE_KEY || event.key === ACTIVE_CONNECTION_ID_KEY) {
+        console.log("Storage change detected, reloading connection...");
+        loadSelectedConnection();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const setSelectedConnection = (connection: ConnectionDetails | null) => {
@@ -65,6 +89,7 @@ export function useSelectedDbConnection() {
 
   return {
     selectedConnection,
-    setSelectedConnection
+    setSelectedConnection,
+    isLoaded
   };
 }

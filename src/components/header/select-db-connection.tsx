@@ -4,27 +4,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form";
 import { Input } from "../ui/input";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
-import { Loader2, CheckCircle, XCircle, Database, Trash2, Pencil } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Database, Trash2, Pencil, Bug } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { useDbConnections } from "@/hooks/useDbConnections";
-import { removeConnection } from "@/lib/removeConnection";
+import { useDbConnections, ConnectionDetails } from "@/hooks/useDbConnections";
 import { useSelectedDbConnection } from "@/hooks/useSelectedDbConnection";
-
-interface ConnectionDetails {
-    id?: string;
-    name: string;
-    host: string;
-    port: string;
-    database: string;
-    user: string;
-    password: string;
-}
 
 export default function DBConnectionDialog() {
     const [isLoading, setIsLoading] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">("idle");
     const [dbDialogOpen, setDbDialogOpen] = useState(false);
-    const { savedConnections, setSavedConnections } = useDbConnections();
+    const { savedConnections, addConnection, updateConnection, removeConnection } = useDbConnections();
     const { selectedConnection, setSelectedConnection } = useSelectedDbConnection();
 
     // Add debugging log for component mount
@@ -36,6 +25,7 @@ export default function DBConnectionDialog() {
 
     const form = useForm<ConnectionDetails>({
         defaultValues: {
+            id: "",
             name: "",
             host: "localhost",
             port: "5432",
@@ -88,38 +78,40 @@ export default function DBConnectionDialog() {
 
             const formData = form.getValues();
 
-            // Generate ID if this is a new connection
+            // Add ID if it's a new connection
+            const connectionId = formData.id || `conn-${Date.now()}`;
+            
+            // Create the connection details object
             const connectionDetails: ConnectionDetails = {
                 ...formData,
-                id: formData.id || `conn-${Date.now()}`
+                id: connectionId
             };
 
             console.log("Saving connection:", connectionDetails);
 
             // Check if it's an edit or new connection
-            let updatedConnections;
-            if (connectionDetails.id && savedConnections.some(c => c.id === connectionDetails.id)) {
+            if (connectionId && savedConnections.some(c => c.id === connectionId)) {
                 // Update existing connection
-                updatedConnections = savedConnections.map(conn =>
-                    conn.id === connectionDetails.id ? connectionDetails : conn
-                );
+                const updatedConnection = updateConnection(connectionDetails);
+                
+                // If this is the currently selected connection, update it
+                if (selectedConnection?.id === connectionId) {
+                    setSelectedConnection(updatedConnection);
+                }
             } else {
                 // Add new connection
-                updatedConnections = [...savedConnections, connectionDetails];
+                const newConnection = addConnection(connectionDetails);
+                
+                // Set as current connection
+                setSelectedConnection(newConnection);
             }
-
-            // Save to localStorage
-            localStorage.setItem('databaseConnections', JSON.stringify(updatedConnections));
-            setSavedConnections(updatedConnections);
-
-            // Set as current connection
-            setSelectedConnection(connectionDetails);
 
             // Close dialog
             setDbDialogOpen(false);
 
             // Reset form
             form.reset({
+                id: "",
                 name: "",
                 host: "localhost",
                 port: "5432",
@@ -156,7 +148,30 @@ export default function DBConnectionDialog() {
             setSelectedConnection(null);
         }
         
-        removeConnection(connectionId, savedConnections, setSavedConnections);
+        // Use the removeConnection method directly
+        removeConnection(connectionId);
+    };
+
+    const debugCreateTestConnection = () => {
+        // Create a test connection
+        const testConnection: ConnectionDetails = {
+            id: `test-${Date.now()}`,
+            name: "Test Database",
+            host: "localhost",
+            port: "5432",
+            database: "postgres",
+            user: "postgres",
+            password: "postgres"
+        };
+        
+        // Add to saved connections using the addConnection method
+        const connection = addConnection(testConnection);
+        
+        // Set as selected connection
+        setSelectedConnection(connection);
+        
+        // Log debug info
+        console.log("Created test database connection:", connection);
     };
 
     return (
@@ -213,6 +228,17 @@ export default function DBConnectionDialog() {
                         }}
                     >
                         Connect new database
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                        className="justify-center text-red-500"
+                        onSelect={(e) => {
+                            e.preventDefault();
+                            debugCreateTestConnection();
+                        }}
+                    >
+                        <Bug className="mr-2 h-4 w-4" />
+                        Debug: Create Test DB
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>

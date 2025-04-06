@@ -3,7 +3,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
-import { testConnection, executeQuery } from './services/database'
+import { testConnection, executeQuery, fetchDatabaseSchema } from './services/database'
 import { generateSqlQuery } from './services/ai'
 
 
@@ -93,6 +93,17 @@ function setupIPC() {
     } catch (error) {
       console.error('Error loading chats:', error);
       throw new Error(`Failed to load chats: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  });
+
+  ipcMain.handle('fetchDbSchema', async (_, dbConfig) => {
+    try {
+      return await fetchDatabaseSchema(dbConfig);
+    } catch (error) {
+      console.error('Schema fetch error:', error);
+      return { 
+        error: error instanceof Error ? error.message : 'Unknown error fetching database schema' 
+      };
     }
   });
 }

@@ -24,6 +24,7 @@ interface AppContextType {
   deleteChat: (id: string) => void;
   getCurrentChat: () => Chat | null;
   addMessageToCurrentChat: (message: Omit<ChatMessage, 'id'>) => void;
+  updateMessage: (messageId: string, updates: Partial<ChatMessage>) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -156,6 +157,29 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  const updateMessage = (messageId: string, updates: Partial<ChatMessage>) => {
+    if (!currentChatId) return;
+    
+    setChats(prev => prev.map(chat => {
+      if (chat.id === currentChatId) {
+        // Find the message and update it
+        const updatedMessages = chat.messages.map(msg => {
+          if (msg.id === messageId) {
+            return { ...msg, ...updates };
+          }
+          return msg;
+        });
+        
+        return {
+          ...chat,
+          updatedAt: Date.now(),
+          messages: updatedMessages
+        };
+      }
+      return chat;
+    }));
+  };
+
   return (
     <AppContext.Provider value={{ 
       chats,
@@ -164,7 +188,8 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
       createNewChat,
       deleteChat,
       getCurrentChat,
-      addMessageToCurrentChat
+      addMessageToCurrentChat,
+      updateMessage
     }}>
       {children}
     </AppContext.Provider>

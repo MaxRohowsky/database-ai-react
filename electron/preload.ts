@@ -53,6 +53,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('generateSQL', { aiConfig, prompt, dbSchema }),
   executeSQL: (dbConfig: ConnectionDetails, query: string) => 
     ipcRenderer.invoke('executeSQL', { dbConfig, query }),
+  fetchDbSchema: (dbConfig: ConnectionDetails) => 
+    ipcRenderer.invoke('fetchDbSchema', dbConfig),
   saveChats: (chats: Chat[]) => 
     ipcRenderer.invoke('saveChats', chats),
   loadChats: () => 

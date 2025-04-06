@@ -46,6 +46,7 @@ interface Window {
     testConnection: (connectionDetails: ConnectionDetails) => Promise<boolean>;
     generateSQL: (aiConfig: AiModelConfig, prompt: string, dbSchema?: string) => Promise<AiResponse>;
     executeSQL: (dbConfig: ConnectionDetails, query: string) => Promise<SqlResult>;
+    fetchDbSchema: (dbConfig: ConnectionDetails) => Promise<{ schema?: string; error?: string }>;
     loadChats: () => Promise<Chat[]>;
     saveChats: (chats: Chat[]) => Promise<void>;
   };
