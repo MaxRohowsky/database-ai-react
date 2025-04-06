@@ -1,102 +1,22 @@
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 import { ScrollAnchor } from "@/hooks/scroll-anchor";
-import { executeSqlQuery } from "@/services/sqlService";
-/* import { useAiConfigStore } from "@/store/ai-config-store"; */
 import { useChatStore } from "@/store/chat-store";
-import { useDbConnectionStore } from "@/store/db-connection-store";
-import { AlertCircle, Edit, Loader2, Play } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { DbChatMessage } from "./ai-chat-message";
 import { ChatInput } from "./chat-input";
+import { ResultChatMessage } from "./db-chat-message";
+import { UserChatMessage } from "./user-chat-message";
 
 export default function Chat() {
-  const {
-    currentChatId,
-    getCurrentChat,
-    addMessageToCurrentChat,
-    createNewChat,
-    updateMessage,
-  } = useChatStore();
+  const { currentChatId, getCurrentChat, createNewChat } = useChatStore();
 
-  /*   const { config: aiConfig } = useAiConfigStore(); */
-  const { getSelectedConnection } = useDbConnectionStore();
-  const dbConfig = getSelectedConnection();
-
-  /*   const [inputValue, setInputValue] = useState(""); */
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [editingSqlId, setEditingSqlId] = useState<string | null>(null);
-  const [editedSqlContent, setEditedSqlContent] = useState<string>("");
 
   // Get the current chat's messages
   const currentChat = getCurrentChat();
   const messages = currentChat?.messages || [];
-
-  // Function to start editing SQL
-  const startEditingSql = (messageId: string, content: string) => {
-    setEditingSqlId(messageId);
-    setEditedSqlContent(content);
-  };
-
-  // Function to save edited SQL
-  const saveEditedSql = (messageId: string) => {
-    if (!editedSqlContent.trim()) return;
-
-    // Update the message using the store function
-    updateMessage(messageId, {
-      content: editedSqlContent,
-    });
-
-    // End editing mode
-    setEditingSqlId(null);
-  };
-
-  // Function to execute SQL query
-  const executeQuery = async (sqlQuery: string) => {
-    console.log("Execute button clicked for SQL:", sqlQuery);
-
-    if (!dbConfig) {
-      setError(
-        "Database not configured. Please configure a database connection first.",
-      );
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Execute the SQL query using the service
-      const result = await executeSqlQuery(sqlQuery, dbConfig);
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      // Add result message to store
-      addMessageToCurrentChat({
-        type: "result",
-        content: result.rows || [],
-        columns: result.columns || [],
-      });
-    } catch (err) {
-      console.error("SQL execution error:", err);
-      setError(
-        err instanceof Error ? err.message : "An error occurred executing SQL",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Force enable execution - useful for debugging
 
   // Create a new chat if none exists
   useEffect(() => {
@@ -104,23 +24,6 @@ export default function Chat() {
       createNewChat();
     }
   }, [currentChatId, createNewChat]);
-
-  // Handle clicks outside of the SQL editing area
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        editingSqlId &&
-        !(event.target as Element).closest(".sql-edit-area")
-      ) {
-        saveEditedSql(editingSqlId);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [editingSqlId, editedSqlContent]);
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -141,130 +44,13 @@ export default function Chat() {
         {messages.map((message) => {
           if (message.type === "user") {
             // User Message
-            return (
-              <Card key={message.id} className="bg-muted/50">
-                <CardContent className="pt-4">
-                  <p>{message.content as string}</p>
-                </CardContent>
-              </Card>
-            );
+            return <UserChatMessage message={message} />;
           } else if (message.type === "sql") {
             // SQL Message
-            return (
-              <Card key={message.id}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <h3 className="text-sm font-medium">Generated SQL</h3>
-                  {editingSqlId !== message.id && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() =>
-                        startEditingSql(message.id, message.content as string)
-                      }
-                      className="h-6 w-6"
-                    >
-                      <Edit className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  {editingSqlId === message.id ? (
-                    <Textarea
-                      className="sql-edit-area bg-muted min-h-[100px] font-mono text-sm"
-                      value={editedSqlContent}
-                      onChange={(e) => setEditedSqlContent(e.target.value)}
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === "Escape") {
-                          setEditingSqlId(null);
-                        } else if (e.key === "Enter" && e.ctrlKey) {
-                          saveEditedSql(message.id);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <pre
-                      className="bg-muted cursor-pointer overflow-auto rounded-md p-4 text-sm"
-                      onClick={() =>
-                        startEditingSql(message.id, message.content as string)
-                      }
-                    >
-                      {message.content as string}
-                    </pre>
-                  )}
-                </CardContent>
-                <CardFooter>
-                  <Button
-                    onClick={() =>
-                      executeQuery(
-                        editingSqlId === message.id
-                          ? editedSqlContent
-                          : (message.content as string),
-                      )
-                    }
-                    disabled={!dbConfig || isLoading}
-                    className="mr-2"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Executing...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="mr-2 h-4 w-4" />
-                        Execute
-                      </>
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
-            );
+            return <DbChatMessage message={message} />;
           } else if (message.type === "result") {
             // Result Message
-            return (
-              <Card key={message.id}>
-                <CardHeader className="pb-2">
-                  <h3 className="text-sm font-medium">
-                    Results after running query
-                  </h3>
-                </CardHeader>
-                <CardContent>
-                  {(message.content as Record<string, unknown>[]).length > 0 ? (
-                    <div className="bg-muted overflow-auto rounded-md p-4">
-                      <table className="w-full">
-                        <thead>
-                          <tr>
-                            {message.columns?.map((column, i) => (
-                              <th key={i} className="border-b p-2 text-left">
-                                {column}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(message.content as Record<string, unknown>[]).map(
-                            (row, i) => (
-                              <tr key={i}>
-                                {message.columns?.map((column, j) => (
-                                  <td key={j} className="border-b p-2">
-                                    {row[column]?.toString() || ""}
-                                  </td>
-                                ))}
-                              </tr>
-                            ),
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="bg-muted text-muted-foreground rounded-md p-4 text-center">
-                      No results returned
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
+            return <ResultChatMessage message={message} />;
           }
         })}
 
