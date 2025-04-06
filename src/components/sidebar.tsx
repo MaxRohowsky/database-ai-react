@@ -8,7 +8,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useChatStore } from "@/store/chat-store";
-import { Home, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { MoreHorizontal, Plus, Star, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -49,29 +49,32 @@ export const AppSidebar = () => {
         </div>
 
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <a href="#">
-                <Home />
-                <span>Home</span>
-              </a>
-            </SidebarMenuButton>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuAction>
-                  <MoreHorizontal />
-                </SidebarMenuAction>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="right" align="start">
-                <DropdownMenuItem>
-                  <span>Edit Project</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>Delete Project</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
+          {chats.map((chats) => (
+            <SidebarMenuItem key={chats.id}>
+              <SidebarMenuButton onClick={() => handleSelectChat(chats.id)}>
+                <span>{chats.title}</span>
+              </SidebarMenuButton>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuAction>
+                    <MoreHorizontal />
+                  </SidebarMenuAction>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="start">
+                  <DropdownMenuItem>
+                    <Star className="mr-2 h-4 w-4 text-amber-500" />
+                    <span>Favourite</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => handleDeleteChat(e, chats.id)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span>Remove</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          ))}
         </SidebarMenu>
 
         <div className="flex-1 overflow-hidden">
