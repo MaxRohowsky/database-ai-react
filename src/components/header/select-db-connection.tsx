@@ -6,22 +6,30 @@ import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { Loader2, CheckCircle, XCircle, Database, Trash2, Pencil, Bug } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { useDbConnections, ConnectionDetails } from "@/hooks/useDbConnections";
-import { useSelectedDbConnection } from "@/hooks/useSelectedDbConnection";
+import { useDbConnectionStore, ConnectionDetails } from "@/store/dbConnectionStore";
 
 export default function DBConnectionDialog() {
     const [isLoading, setIsLoading] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">("idle");
     const [dbDialogOpen, setDbDialogOpen] = useState(false);
-    const { savedConnections, addConnection, updateConnection, removeConnection } = useDbConnections();
-    const { selectedConnection, setSelectedConnection } = useSelectedDbConnection();
+    
+    const { 
+        connections, 
+        addConnection, 
+        updateConnection, 
+        removeConnection,
+        getSelectedConnection,
+        setSelectedConnectionId
+    } = useDbConnectionStore();
+    
+    const selectedConnection = getSelectedConnection();
 
     // Add debugging log for component mount
     useEffect(() => {
         console.log("DBConnectionDialog mounted");
-        console.log("Saved connections:", savedConnections);
+        console.log("Saved connections:", connections);
         console.log("Selected connection:", selectedConnection);
-    }, [savedConnections, selectedConnection]);
+    }, [connections, selectedConnection]);
 
     const form = useForm<ConnectionDetails>({
         defaultValues: {
@@ -90,20 +98,20 @@ export default function DBConnectionDialog() {
             console.log("Saving connection:", connectionDetails);
 
             // Check if it's an edit or new connection
-            if (connectionId && savedConnections.some(c => c.id === connectionId)) {
+            if (connectionId && connections.some(c => c.id === connectionId)) {
                 // Update existing connection
                 const updatedConnection = updateConnection(connectionDetails);
                 
                 // If this is the currently selected connection, update it
                 if (selectedConnection?.id === connectionId) {
-                    setSelectedConnection(updatedConnection);
+                    setSelectedConnectionId(updatedConnection.id);
                 }
             } else {
                 // Add new connection
                 const newConnection = addConnection(connectionDetails);
                 
                 // Set as current connection
-                setSelectedConnection(newConnection);
+                setSelectedConnectionId(newConnection.id);
             }
 
             // Close dialog
@@ -126,7 +134,7 @@ export default function DBConnectionDialog() {
     
     const handleSelectConnection = (connection: ConnectionDetails) => {
         console.log("Selected connection:", connection);
-        setSelectedConnection(connection);
+        setSelectedConnectionId(connection.id);
     };
 
     // Edit existing connection
@@ -142,13 +150,6 @@ export default function DBConnectionDialog() {
     const handleDeleteConnection = (e: React.MouseEvent, connectionId: string) => {
         e.stopPropagation();
         console.log('Removing connection:', connectionId);
-        
-        // If deleting the selected connection, clear it
-        if (selectedConnection?.id === connectionId) {
-            setSelectedConnection(null);
-        }
-        
-        // Use the removeConnection method directly
         removeConnection(connectionId);
     };
 
@@ -168,7 +169,7 @@ export default function DBConnectionDialog() {
         const connection = addConnection(testConnection);
         
         // Set as selected connection
-        setSelectedConnection(connection);
+        setSelectedConnectionId(connection.id);
         
         // Log debug info
         console.log("Created test database connection:", connection);
@@ -186,8 +187,8 @@ export default function DBConnectionDialog() {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    {savedConnections.length > 0 ? (
-                        savedConnections.map(conn => (
+                    {connections.length > 0 ? (
+                        connections.map(conn => (
                             <DropdownMenuItem 
                                 key={conn.id} 
                                 className="flex items-center justify-between cursor-pointer"

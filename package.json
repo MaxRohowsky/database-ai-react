@@ -31,7 +31,8 @@
     "tailwind-merge": "^3.1.0",
     "tailwindcss": "^4.1.3",
     "tw-animate-css": "^1.2.5",
-    "zod": "^3.24.2"
+    "zod": "^3.24.2",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@types/pg": "^8.11.11",

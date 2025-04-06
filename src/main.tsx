@@ -2,12 +2,13 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './app.tsx'
 import './index.css'
-import { AppContextProvider } from './context-provider.tsx'
+import { initializeStores } from './store'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <AppContextProvider>
+// Initialize all stores before rendering the app
+initializeStores().then(() => {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
       <App />
-    </AppContextProvider>
-  </React.StrictMode>,
-)
+    </React.StrictMode>,
+  )
+})

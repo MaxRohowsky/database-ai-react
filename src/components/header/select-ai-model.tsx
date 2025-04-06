@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { useState, useEffect } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Settings, Check } from "lucide-react";
-import { useAiModelConfig } from "@/hooks/useAiModelConfig";
+import { useAiConfigStore } from "@/store/aiConfigStore";
 
 // Define supported AI models - focusing only on OpenAI models
 const aiModels = [
@@ -14,7 +14,7 @@ const aiModels = [
 ];
 
 export default function AiConfigDialog() {
-  const { aiConfig, setAiConfig } = useAiModelConfig();
+  const { config: aiConfig, setConfig } = useAiConfigStore();
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState("gpt-3.5-turbo");
@@ -34,7 +34,7 @@ export default function AiConfigDialog() {
 
   const handleSelectModel = (selectedModel: typeof aiModels[0]) => {
     // Directly set the config with the current API key and selected model
-    setAiConfig({
+    setConfig({
       provider: 'openai',
       apiKey: apiKey,
       model: selectedModel.id
@@ -43,7 +43,7 @@ export default function AiConfigDialog() {
 
   const handleSaveConfig = () => {
     // Save the OpenAI configuration
-    setAiConfig({
+    setConfig({
       provider: 'openai',
       apiKey: apiKey,
       model: model

@@ -1,7 +1,7 @@
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import { Plus, Trash2 } from 'lucide-react';
-import { useAppContext } from '@/context-provider';
+import { useChatStore } from '@/store/chatStore';
 
 // Helper function to format date
 const formatDate = (timestamp: number): string => {
@@ -10,7 +10,7 @@ const formatDate = (timestamp: number): string => {
 };
 
 export const Sidebar = () => {
-  const { chats, currentChatId, setCurrentChatId, createNewChat, deleteChat } = useAppContext();
+  const { chats, currentChatId, setCurrentChatId, createNewChat, deleteChat } = useChatStore();
   
   const handleSelectChat = (chatId: string) => {
     setCurrentChatId(chatId);

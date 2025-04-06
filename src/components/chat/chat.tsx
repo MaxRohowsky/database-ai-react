@@ -3,10 +3,11 @@ import { Card, CardContent, CardFooter, CardHeader } from "../ui/card"
 import { Button } from "../ui/button"
 import { ScrollArea } from "../ui/scroll-area"
 import { Textarea } from "../ui/textarea"
-import { useAppContext } from "@/context-provider"
 import { AlertCircle, Send, Play, Loader2, Edit } from "lucide-react"
-import { useAiModelConfig } from "@/hooks/useAiModelConfig"
-import { useSelectedDbConnection } from "@/hooks/useSelectedDbConnection"
+import { useChatStore } from "@/store/chatStore"
+import { useAiConfigStore } from "@/store/aiConfigStore"
+import { useDbConnectionStore } from "@/store/dbConnectionStore"
+import { generateSql, executeSqlQuery, fetchDatabaseSchema } from "@/services/sqlService"
 
 export default function Chat() {
     const { 
@@ -15,10 +16,11 @@ export default function Chat() {
         addMessageToCurrentChat,
         createNewChat,
         updateMessage
-    } = useAppContext();
+    } = useChatStore();
     
-    const { aiConfig } = useAiModelConfig();
-    const { selectedConnection: dbConfig } = useSelectedDbConnection();
+    const { config: aiConfig } = useAiConfigStore();
+    const { getSelectedConnection } = useDbConnectionStore();
+    const dbConfig = getSelectedConnection();
     
     const [inputValue, setInputValue] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -101,7 +103,7 @@ export default function Chat() {
     const saveEditedSql = (messageId: string) => {
         if (!editedSqlContent.trim()) return;
         
-        // Update the message using the context function
+        // Update the message using the store function
         updateMessage(messageId, {
             content: editedSqlContent
         });
@@ -122,7 +124,7 @@ export default function Chat() {
         setIsLoading(true);
         setError(null);
         
-        // Add user message to context
+        // Add user message to store
         addMessageToCurrentChat({
             type: 'user',
             content: inputValue
@@ -140,7 +142,7 @@ export default function Chat() {
             if (dbConfig) {
                 try {
                     console.log("Fetching database schema for context...");
-                    const schemaResult = await window.electronAPI.fetchDbSchema(dbConfig);
+                    const schemaResult = await fetchDatabaseSchema(dbConfig);
                     if (schemaResult && !schemaResult.error) {
                         dbSchema = schemaResult.schema;
                         console.log("Successfully fetched database schema");
@@ -153,31 +155,14 @@ export default function Chat() {
                 }
             }
             
-            console.log("Generating SQL with config:", JSON.stringify({
-                provider: aiConfig.provider,
-                model: aiConfig.model,
-                apiKeyLength: aiConfig.apiKey ? aiConfig.apiKey.length : 0,
-                hasSchema: !!dbSchema
-            }));
-            
-            // Generate SQL with AI
-            const sqlResponse = await window.electronAPI.generateSQL(
-                aiConfig, 
-                userQuery,
-                dbSchema
-            );
-            
-            console.log("SQL Response:", JSON.stringify(sqlResponse));
+            // Generate SQL with AI using the service
+            const sqlResponse = await generateSql(userQuery, aiConfig, dbSchema);
             
             if (sqlResponse.error) {
                 throw new Error(sqlResponse.error);
             }
             
-            if (!sqlResponse.sqlQuery) {
-                throw new Error("No SQL was generated. Please try again.");
-            }
-            
-            // Add SQL message to context
+            // Add SQL message to store
             addMessageToCurrentChat({
                 type: 'sql',
                 content: sqlResponse.sqlQuery
@@ -198,19 +183,9 @@ export default function Chat() {
     // Function to execute SQL query
     const executeQuery = async (sqlQuery: string) => {
         console.log("Execute button clicked for SQL:", sqlQuery);
-        console.log("Current database config:", dbConfig);
         
         if (!dbConfig) {
             setError("Database not configured. Please configure a database connection first.");
-            return;
-        }
-        
-        // Make sure all required fields are present in the dbConfig
-        const requiredFields = ['host', 'port', 'database', 'user'];
-        const missingFields = requiredFields.filter(field => !dbConfig[field as keyof typeof dbConfig]);
-        
-        if (missingFields.length > 0) {
-            setError(`Database configuration is incomplete. Missing fields: ${missingFields.join(', ')}`);
             return;
         }
         
@@ -218,28 +193,14 @@ export default function Chat() {
         setError(null);
         
         try {
-            console.log("Executing SQL query:", sqlQuery);
-            console.log("Database config:", JSON.stringify({
-                host: dbConfig.host,
-                port: dbConfig.port,
-                database: dbConfig.database,
-                user: dbConfig.user,
-                hasPassword: !!dbConfig.password
-            }));
-            
-            const result = await window.electronAPI.executeSQL(dbConfig, sqlQuery);
-            
-            console.log("SQL execution result:", JSON.stringify({
-                columns: result.columns,
-                rowCount: result.rows ? result.rows.length : 0,
-                error: result.error
-            }));
+            // Execute the SQL query using the service
+            const result = await executeSqlQuery(sqlQuery, dbConfig);
             
             if (result.error) {
                 throw new Error(result.error);
             }
             
-            // Add result message to context
+            // Add result message to store
             addMessageToCurrentChat({
                 type: 'result',
                 content: result.rows || [],
@@ -253,8 +214,6 @@ export default function Chat() {
             setError(err instanceof Error ? err.message : 'An error occurred executing SQL');
         } finally {
             setIsLoading(false);
-            // Final scroll after loading completes
-            setTimeout(scrollToBottom, 50);
         }
     };
 
@@ -274,9 +233,13 @@ export default function Chat() {
                 user: dbConfig.user,
                 hasPassword: !!dbConfig.password
             });
+            
+            // Execute the query with the existing config
+            executeQuery(sqlQuery);
         } else {
             console.log("No database config available. Creating a test config for debugging");
             const testConfig = {
+                id: "test-debug-id",
                 host: "localhost",
                 port: "5432",
                 database: "postgres",
@@ -285,12 +248,25 @@ export default function Chat() {
                 name: "Test Database"
             };
             console.log("Using test config:", testConfig);
-            executeQuery(sqlQuery);
-        }
-        
-        // Execute the query
-        if (dbConfig) {
-            executeQuery(sqlQuery);
+            
+            // Execute with the test config using the service directly
+            executeSqlQuery(sqlQuery, testConfig)
+                .then(result => {
+                    if (result.error) {
+                        setError(result.error);
+                    } else {
+                        // Add result message to chat
+                        addMessageToCurrentChat({
+                            type: 'result',
+                            content: result.rows || [],
+                            columns: result.columns || []
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error("Error in force execute:", err);
+                    setError(err instanceof Error ? err.message : 'An error occurred during forced execution');
+                });
         }
     };
 
