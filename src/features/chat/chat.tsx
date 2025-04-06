@@ -6,6 +6,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollAnchor } from "@/hooks/scroll-anchor";
 import {
   executeSqlQuery,
   fetchDatabaseSchema,
@@ -15,7 +16,7 @@ import { useAiConfigStore } from "@/store/ai-config-store";
 import { useChatStore } from "@/store/chat-store";
 import { useDbConnectionStore } from "@/store/db-connection-store";
 import { AlertCircle, Edit, Loader2, Play, Send } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Chat() {
   const {
@@ -33,73 +34,13 @@ export default function Chat() {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const lastMessageRef = useRef<HTMLDivElement>(null);
+
   const [editingSqlId, setEditingSqlId] = useState<string | null>(null);
   const [editedSqlContent, setEditedSqlContent] = useState<string>("");
 
   // Get the current chat's messages
   const currentChat = getCurrentChat();
   const messages = currentChat?.messages || [];
-
-  // Enhanced scroll to bottom function with smoother behavior
-  const scrollToBottom = (behavior: ScrollBehavior = "auto") => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-    }
-
-    // Also try to scroll to the last message using the ref
-    if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({ behavior, block: "end" });
-    }
-  };
-
-  // Scroll when messages or loading state changes
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
-
-  // Schedule multiple scrolls with different timings to handle various rendering scenarios
-  useEffect(() => {
-    // Immediate scroll
-    scrollToBottom();
-
-    // Delayed scrolls to handle different rendering times
-    const timers = [
-      setTimeout(() => scrollToBottom(), 100),
-      setTimeout(() => scrollToBottom("smooth"), 300),
-      setTimeout(() => scrollToBottom(), 500),
-    ];
-
-    return () => timers.forEach((timer) => clearTimeout(timer));
-  }, [messages]);
-
-  // Set up intersection observer to detect when the last message is visible
-  useEffect(() => {
-    if (!lastMessageRef.current) return;
-
-    const options = {
-      root: scrollAreaRef.current,
-      rootMargin: "0px",
-      threshold: 0.1,
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-      const [entry] = entries;
-      if (!entry.isIntersecting) {
-        // If the last message is not visible, scroll to it
-        scrollToBottom("smooth");
-      }
-    }, options);
-
-    observer.observe(lastMessageRef.current);
-
-    return () => {
-      if (lastMessageRef.current) {
-        observer.unobserve(lastMessageRef.current);
-      }
-    };
-  }, [messages]);
 
   // Function to start editing SQL
   const startEditingSql = (messageId: string, content: string) => {
@@ -141,9 +82,6 @@ export default function Chat() {
     const userQuery = inputValue.trim();
     setInputValue("");
 
-    // Ensure scroll happens after adding the message
-    setTimeout(scrollToBottom, 50);
-
     try {
       // Get database schema if a connection is configured
       let dbSchema: string | undefined = undefined;
@@ -175,9 +113,6 @@ export default function Chat() {
         type: "sql",
         content: sqlResponse.sqlQuery,
       });
-
-      // Ensure scroll after SQL generation
-      setTimeout(scrollToBottom, 50);
     } catch (err) {
       console.error("SQL generation error:", err);
       setError(
@@ -185,8 +120,6 @@ export default function Chat() {
       );
     } finally {
       setIsLoading(false);
-      // Final scroll after loading completes
-      setTimeout(scrollToBottom, 50);
     }
   };
 
@@ -218,9 +151,6 @@ export default function Chat() {
         content: result.rows || [],
         columns: result.columns || [],
       });
-
-      // Ensure scroll after query execution
-      setTimeout(scrollToBottom, 50);
     } catch (err) {
       console.error("SQL execution error:", err);
       setError(
@@ -273,18 +203,11 @@ export default function Chat() {
         )}
 
         {/* Chat Messages */}
-        {messages.map((message, index) => {
-          // Determine if this is the last message for ref attachment
-          const isLastMessage = index === messages.length - 1;
-
+        {messages.map((message) => {
           if (message.type === "user") {
             // User Message
             return (
-              <Card
-                key={message.id}
-                className="bg-muted/50"
-                ref={isLastMessage ? lastMessageRef : undefined}
-              >
+              <Card key={message.id} className="bg-muted/50">
                 <CardContent className="pt-4">
                   <p>{message.content as string}</p>
                 </CardContent>
@@ -293,10 +216,7 @@ export default function Chat() {
           } else if (message.type === "sql") {
             // SQL Message
             return (
-              <Card
-                key={message.id}
-                ref={isLastMessage ? lastMessageRef : undefined}
-              >
+              <Card key={message.id}>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <h3 className="text-sm font-medium">Generated SQL</h3>
                   {editingSqlId !== message.id && (
@@ -368,10 +288,7 @@ export default function Chat() {
           } else if (message.type === "result") {
             // Result Message
             return (
-              <Card
-                key={message.id}
-                ref={isLastMessage ? lastMessageRef : undefined}
-              >
+              <Card key={message.id}>
                 <CardHeader className="pb-2">
                   <h3 className="text-sm font-medium">
                     Results after running query
@@ -426,8 +343,7 @@ export default function Chat() {
           </div>
         )}
 
-        {/* Invisible element at the bottom to scroll to */}
-        <div ref={lastMessageRef} className="h-0.5 w-full" />
+        <ScrollAnchor dependencies={[messages]} />
       </div>
 
       {/* Input Area - Fixed at the bottom */}
