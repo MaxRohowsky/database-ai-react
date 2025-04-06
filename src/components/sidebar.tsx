@@ -1,6 +1,8 @@
 import {
   Sidebar,
   SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuAction,
@@ -8,7 +10,13 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useChatStore } from "@/store/chat-store";
-import { MoreHorizontal, Plus, Star, Trash2 } from "lucide-react";
+import {
+  MessageCircle,
+  MoreHorizontal,
+  Plus,
+  Star,
+  Trash2,
+} from "lucide-react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -17,7 +25,6 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { ScrollArea } from "./ui/scroll-area";
-
 // Helper function to format date
 const formatDate = (timestamp: number): string => {
   const date = new Date(timestamp);
@@ -39,42 +46,53 @@ export const AppSidebar = () => {
 
   return (
     <Sidebar>
-      <SidebarContent>
-        <SidebarGroupLabel>Application</SidebarGroupLabel>
-        <div className="border-b p-4">
-          <Button className="w-full justify-start" onClick={createNewChat}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Chat
-          </Button>
-        </div>
+      <SidebarContent className="">
+        <Button className="w-full justify-start" onClick={createNewChat}>
+          <Plus className="mr-2 h-4 w-4" />
+          New Chat
+        </Button>
 
         <SidebarMenu>
-          {chats.map((chats) => (
-            <SidebarMenuItem key={chats.id}>
-              <SidebarMenuButton onClick={() => handleSelectChat(chats.id)}>
-                <span>{chats.title}</span>
-              </SidebarMenuButton>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuAction>
-                    <MoreHorizontal />
-                  </SidebarMenuAction>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="right" align="start">
-                  <DropdownMenuItem>
-                    <Star className="mr-2 h-4 w-4 text-amber-500" />
-                    <span>Favourite</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={(e) => handleDeleteChat(e, chats.id)}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    <span>Remove</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </SidebarMenuItem>
-          ))}
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-black">
+              <Star className="mr-2 h-4 w-4 text-amber-500" />
+              Favourites
+            </SidebarGroupLabel>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-black">
+              <MessageCircle className="mr-2 h-4 w-4" />
+              Recent Chats
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              {chats.map((chats) => (
+                <SidebarMenuItem className="py-[0.5px]" key={chats.id}>
+                  <SidebarMenuButton onClick={() => handleSelectChat(chats.id)}>
+                    <span>{chats.title}</span>
+                  </SidebarMenuButton>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <SidebarMenuAction>
+                        <MoreHorizontal />
+                      </SidebarMenuAction>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent side="right" align="start">
+                      <DropdownMenuItem>
+                        <Star className="mr-2 h-4 w-4 text-amber-500" />
+                        <span>Favourite</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => handleDeleteChat(e, chats.id)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Remove</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </SidebarMenuItem>
+              ))}
+            </SidebarGroupContent>
+          </SidebarGroup>
         </SidebarMenu>
 
         <div className="flex-1 overflow-hidden">
