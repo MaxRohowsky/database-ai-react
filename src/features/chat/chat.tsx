@@ -5,7 +5,6 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import {
   executeSqlQuery,
@@ -233,63 +232,6 @@ export default function Chat() {
   };
 
   // Force enable execution - useful for debugging
-  const forceEnableExecution = (event: React.MouseEvent, sqlQuery: string) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    console.log("FORCE EXECUTING SQL, bypassing disabled state");
-    console.log("Current dbConfig status:", !!dbConfig);
-
-    if (dbConfig) {
-      console.log("Database config details:", {
-        host: dbConfig.host,
-        port: dbConfig.port,
-        database: dbConfig.database,
-        user: dbConfig.user,
-        hasPassword: !!dbConfig.password,
-      });
-
-      // Execute the query with the existing config
-      executeQuery(sqlQuery);
-    } else {
-      console.log(
-        "No database config available. Creating a test config for debugging",
-      );
-      const testConfig = {
-        id: "test-debug-id",
-        host: "localhost",
-        port: "5432",
-        database: "postgres",
-        user: "postgres",
-        password: "postgres",
-        name: "Test Database",
-      };
-      console.log("Using test config:", testConfig);
-
-      // Execute with the test config using the service directly
-      executeSqlQuery(sqlQuery, testConfig)
-        .then((result) => {
-          if (result.error) {
-            setError(result.error);
-          } else {
-            // Add result message to chat
-            addMessageToCurrentChat({
-              type: "result",
-              content: result.rows || [],
-              columns: result.columns || [],
-            });
-          }
-        })
-        .catch((err) => {
-          console.error("Error in force execute:", err);
-          setError(
-            err instanceof Error
-              ? err.message
-              : "An error occurred during forced execution",
-          );
-        });
-    }
-  };
 
   // Create a new chat if none exists
   useEffect(() => {
@@ -318,191 +260,175 @@ export default function Chat() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Chat Area */}
-      <ScrollArea className="flex-grow overflow-y-auto p-4" ref={scrollAreaRef}>
-        <div className="mx-auto max-w-7xl space-y-4">
-          {/* Error Message */}
-          {error && (
-            <Card className="border-red-200 bg-red-50">
-              <CardContent className="flex pt-4">
-                <AlertCircle className="mt-0.5 mr-2 h-4 w-4 text-red-500" />
-                <p className="text-red-500">{error}</p>
-              </CardContent>
-            </Card>
-          )}
 
-          {/* Chat Messages */}
-          {messages.map((message, index) => {
-            // Determine if this is the last message for ref attachment
-            const isLastMessage = index === messages.length - 1;
+      <div className="mx-auto max-w-7xl space-y-4">
+        {/* Error Message */}
+        {error && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="flex pt-4">
+              <AlertCircle className="mt-0.5 mr-2 h-4 w-4 text-red-500" />
+              <p className="text-red-500">{error}</p>
+            </CardContent>
+          </Card>
+        )}
 
-            if (message.type === "user") {
-              // User Message
-              return (
-                <Card
-                  key={message.id}
-                  className="bg-muted/50"
-                  ref={isLastMessage ? lastMessageRef : undefined}
-                >
-                  <CardContent className="pt-4">
-                    <p>{message.content as string}</p>
-                  </CardContent>
-                </Card>
-              );
-            } else if (message.type === "sql") {
-              // SQL Message
-              return (
-                <Card
-                  key={message.id}
-                  ref={isLastMessage ? lastMessageRef : undefined}
-                >
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <h3 className="text-sm font-medium">Generated SQL</h3>
-                    {editingSqlId !== message.id && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          startEditingSql(message.id, message.content as string)
-                        }
-                        className="h-6 w-6"
-                      >
-                        <Edit className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    {editingSqlId === message.id ? (
-                      <Textarea
-                        className="sql-edit-area bg-muted min-h-[100px] font-mono text-sm"
-                        value={editedSqlContent}
-                        onChange={(e) => setEditedSqlContent(e.target.value)}
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === "Escape") {
-                            setEditingSqlId(null);
-                          } else if (e.key === "Enter" && e.ctrlKey) {
-                            saveEditedSql(message.id);
-                          }
-                        }}
-                      />
-                    ) : (
-                      <pre
-                        className="bg-muted cursor-pointer overflow-auto rounded-md p-4 text-sm"
-                        onClick={() =>
-                          startEditingSql(message.id, message.content as string)
-                        }
-                      >
-                        {message.content as string}
-                      </pre>
-                    )}
-                  </CardContent>
-                  <CardFooter>
+        {/* Chat Messages */}
+        {messages.map((message, index) => {
+          // Determine if this is the last message for ref attachment
+          const isLastMessage = index === messages.length - 1;
+
+          if (message.type === "user") {
+            // User Message
+            return (
+              <Card
+                key={message.id}
+                className="bg-muted/50"
+                ref={isLastMessage ? lastMessageRef : undefined}
+              >
+                <CardContent className="pt-4">
+                  <p>{message.content as string}</p>
+                </CardContent>
+              </Card>
+            );
+          } else if (message.type === "sql") {
+            // SQL Message
+            return (
+              <Card
+                key={message.id}
+                ref={isLastMessage ? lastMessageRef : undefined}
+              >
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <h3 className="text-sm font-medium">Generated SQL</h3>
+                  {editingSqlId !== message.id && (
                     <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() =>
-                        executeQuery(
-                          editingSqlId === message.id
-                            ? editedSqlContent
-                            : (message.content as string),
-                        )
+                        startEditingSql(message.id, message.content as string)
                       }
-                      disabled={!dbConfig || isLoading}
-                      className="mr-2"
+                      className="h-6 w-6"
                     >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Executing...
-                        </>
-                      ) : (
-                        <>
-                          <Play className="mr-2 h-4 w-4" />
-                          Execute
-                        </>
-                      )}
+                      <Edit className="h-3.5 w-3.5" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) =>
-                        forceEnableExecution(
-                          e,
-                          editingSqlId === message.id
-                            ? editedSqlContent
-                            : (message.content as string),
-                        )
+                  )}
+                </CardHeader>
+                <CardContent>
+                  {editingSqlId === message.id ? (
+                    <Textarea
+                      className="sql-edit-area bg-muted min-h-[100px] font-mono text-sm"
+                      value={editedSqlContent}
+                      onChange={(e) => setEditedSqlContent(e.target.value)}
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          setEditingSqlId(null);
+                        } else if (e.key === "Enter" && e.ctrlKey) {
+                          saveEditedSql(message.id);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <pre
+                      className="bg-muted cursor-pointer overflow-auto rounded-md p-4 text-sm"
+                      onClick={() =>
+                        startEditingSql(message.id, message.content as string)
                       }
                     >
-                      Force Execute
-                    </Button>
-                  </CardFooter>
-                </Card>
-              );
-            } else if (message.type === "result") {
-              // Result Message
-              return (
-                <Card
-                  key={message.id}
-                  ref={isLastMessage ? lastMessageRef : undefined}
-                >
-                  <CardHeader className="pb-2">
-                    <h3 className="text-sm font-medium">
-                      Results after running query
-                    </h3>
-                  </CardHeader>
-                  <CardContent>
-                    {(message.content as Record<string, unknown>[]).length >
-                    0 ? (
-                      <div className="bg-muted overflow-auto rounded-md p-4">
-                        <table className="w-full">
-                          <thead>
-                            <tr>
-                              {message.columns?.map((column, i) => (
-                                <th key={i} className="border-b p-2 text-left">
-                                  {column}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {(message.content as Record<string, unknown>[]).map(
-                              (row, i) => (
-                                <tr key={i}>
-                                  {message.columns?.map((column, j) => (
-                                    <td key={j} className="border-b p-2">
-                                      {row[column]?.toString() || ""}
-                                    </td>
-                                  ))}
-                                </tr>
-                              ),
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
+                      {message.content as string}
+                    </pre>
+                  )}
+                </CardContent>
+                <CardFooter>
+                  <Button
+                    onClick={() =>
+                      executeQuery(
+                        editingSqlId === message.id
+                          ? editedSqlContent
+                          : (message.content as string),
+                      )
+                    }
+                    disabled={!dbConfig || isLoading}
+                    className="mr-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Executing...
+                      </>
                     ) : (
-                      <div className="bg-muted text-muted-foreground rounded-md p-4 text-center">
-                        No results returned
-                      </div>
+                      <>
+                        <Play className="mr-2 h-4 w-4" />
+                        Execute
+                      </>
                     )}
-                  </CardContent>
-                </Card>
-              );
-            }
-          })}
+                  </Button>
+                </CardFooter>
+              </Card>
+            );
+          } else if (message.type === "result") {
+            // Result Message
+            return (
+              <Card
+                key={message.id}
+                ref={isLastMessage ? lastMessageRef : undefined}
+              >
+                <CardHeader className="pb-2">
+                  <h3 className="text-sm font-medium">
+                    Results after running query
+                  </h3>
+                </CardHeader>
+                <CardContent>
+                  {(message.content as Record<string, unknown>[]).length > 0 ? (
+                    <div className="bg-muted overflow-auto rounded-md p-4">
+                      <table className="w-full">
+                        <thead>
+                          <tr>
+                            {message.columns?.map((column, i) => (
+                              <th key={i} className="border-b p-2 text-left">
+                                {column}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(message.content as Record<string, unknown>[]).map(
+                            (row, i) => (
+                              <tr key={i}>
+                                {message.columns?.map((column, j) => (
+                                  <td key={j} className="border-b p-2">
+                                    {row[column]?.toString() || ""}
+                                  </td>
+                                ))}
+                              </tr>
+                            ),
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="bg-muted text-muted-foreground rounded-md p-4 text-center">
+                      No results returned
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          }
+        })}
 
-          {/* Empty State */}
-          {messages.length === 0 && (
-            <div className="text-muted-foreground p-8 text-center">
-              <p>
-                Enter a natural language query to generate SQL and query your
-                database.
-              </p>
-            </div>
-          )}
+        {/* Empty State */}
+        {messages.length === 0 && (
+          <div className="text-muted-foreground p-8 text-center">
+            <p>
+              Enter a natural language query to generate SQL and query your
+              database.
+            </p>
+          </div>
+        )}
 
-          {/* Invisible element at the bottom to scroll to */}
-          <div ref={lastMessageRef} className="h-0.5 w-full" />
-        </div>
-      </ScrollArea>
+        {/* Invisible element at the bottom to scroll to */}
+        <div ref={lastMessageRef} className="h-0.5 w-full" />
+      </div>
 
       {/* Input Area - Fixed at the bottom */}
       <div className="border-border flex-shrink-0 border-t p-4">
