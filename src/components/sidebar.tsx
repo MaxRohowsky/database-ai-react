@@ -2,10 +2,20 @@ import {
   Sidebar,
   SidebarContent,
   SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuAction,
+  SidebarMenuButton,
+  SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useChatStore } from "@/store/chat-store";
-import { Plus, Trash2 } from "lucide-react";
+import { Home, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import { ScrollArea } from "./ui/scroll-area";
 
 // Helper function to format date
@@ -38,6 +48,32 @@ export const AppSidebar = () => {
           </Button>
         </div>
 
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <a href="#">
+                <Home />
+                <span>Home</span>
+              </a>
+            </SidebarMenuButton>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuAction>
+                  <MoreHorizontal />
+                </SidebarMenuAction>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="start">
+                <DropdownMenuItem>
+                  <span>Edit Project</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <span>Delete Project</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full pr-3">
             <div className="px-4 py-2 pb-4">
@@ -46,6 +82,7 @@ export const AppSidebar = () => {
                   <h4 className="text-muted-foreground mb-2 text-sm font-medium">
                     History of previous chats
                   </h4>
+
                   <div className="space-y-1">
                     {chats.map((chat) => (
                       <div
@@ -66,6 +103,7 @@ export const AppSidebar = () => {
                             </div>
                           </div>
                         </Button>
+
                         <Button
                           variant="ghost"
                           size="icon"
