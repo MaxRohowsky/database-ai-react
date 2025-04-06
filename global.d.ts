@@ -9,7 +9,7 @@ interface ConnectionDetails {
 
 interface ChatMessage {
   id: string;
-  type: 'user' | 'sql' | 'result';
+  type: 'user' | 'ai' | 'db';
   content: string | Record<string, unknown>[];
   columns?: string[];
   error?: string;

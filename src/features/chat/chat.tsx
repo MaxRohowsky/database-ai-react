@@ -7,16 +7,13 @@ import {
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollAnchor } from "@/hooks/scroll-anchor";
-import {
-  executeSqlQuery,
-  fetchDatabaseSchema,
-  generateSql,
-} from "@/services/sqlService";
-import { useAiConfigStore } from "@/store/ai-config-store";
+import { executeSqlQuery } from "@/services/sqlService";
+/* import { useAiConfigStore } from "@/store/ai-config-store"; */
 import { useChatStore } from "@/store/chat-store";
 import { useDbConnectionStore } from "@/store/db-connection-store";
-import { AlertCircle, Edit, Loader2, Play, Send } from "lucide-react";
+import { AlertCircle, Edit, Loader2, Play } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ChatInput } from "./chat-input";
 
 export default function Chat() {
   const {
@@ -27,11 +24,11 @@ export default function Chat() {
     updateMessage,
   } = useChatStore();
 
-  const { config: aiConfig } = useAiConfigStore();
+  /*   const { config: aiConfig } = useAiConfigStore(); */
   const { getSelectedConnection } = useDbConnectionStore();
   const dbConfig = getSelectedConnection();
 
-  const [inputValue, setInputValue] = useState("");
+  /*   const [inputValue, setInputValue] = useState(""); */
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,7 +59,7 @@ export default function Chat() {
   };
 
   // Function to handle form submission
-  const handleSubmit = async () => {
+  /*   const handleSubmit = async () => {
     if (!inputValue.trim()) return;
 
     if (!aiConfig) {
@@ -121,7 +118,7 @@ export default function Chat() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }; */
 
   // Function to execute SQL query
   const executeQuery = async (sqlQuery: string) => {
@@ -346,8 +343,14 @@ export default function Chat() {
         <ScrollAnchor dependencies={[messages]} />
       </div>
 
+      <ChatInput
+        isLoading={isLoading}
+        setError={setError}
+        setIsLoading={setIsLoading}
+      />
+
       {/* Input Area - Fixed at the bottom */}
-      <div className="border-border flex-shrink-0 border-t p-4">
+      {/*       <div className="border-border flex-shrink-0 border-t p-4">
         <div className="mx-auto flex max-w-4xl">
           <Textarea
             className="min-h-[80px] flex-1 resize-none"
@@ -372,7 +375,7 @@ export default function Chat() {
             )}
           </Button>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
