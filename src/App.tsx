@@ -1,6 +1,6 @@
 import { Sidebar } from "@/components/sidebar"
 import Header from "@/components/header/header"
-import Chat from "@/components/chat/chat"
+import Chat from "@/features/chat/chat"
 
 export function App() {
   return (
