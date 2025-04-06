@@ -1,18 +1,20 @@
 import Header from "@/components/header/header";
-import { Sidebar } from "@/components/sidebar";
+import { AppSidebar } from "@/components/sidebar";
 import Chat from "@/features/chat/chat";
+import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 
 export function App() {
   return (
-    <div className="bg-background flex h-screen">
-      <Sidebar />
+    <SidebarProvider>
+      <AppSidebar />
 
       {/* Main Content */}
       <main className="flex flex-1 flex-col overflow-hidden">
+        <SidebarTrigger />
         <Header />
         <Chat />
       </main>
-    </div>
+    </SidebarProvider>
   );
 }
 
