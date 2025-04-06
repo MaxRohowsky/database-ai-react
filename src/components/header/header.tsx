@@ -6,36 +6,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useChatStore } from "@/store/chat-store";
 import { MoreHorizontal, PenSquare, Star, Trash2 } from "lucide-react";
-import { useState } from "react";
+
+import { useChatManager } from "@/hooks/use-chat-manager";
 import { RenameDialog } from "../rename-chat-dialog";
 import AiConfigDialog from "./select-ai-model";
 import DBConnectionDialog from "./select-db-connection";
 
 export default function Header() {
-  const { getCurrentChat, favouriteChat, deleteChat, renameChat } =
-    useChatStore();
+  const { getCurrentChat } = useChatStore();
   const currentChat = getCurrentChat();
-
-  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
-
-  const handleFavouriteChat = () => {
-    if (currentChat) {
-      favouriteChat(currentChat.id);
-    }
-  };
-
-  const handleDeleteChat = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (currentChat) {
-      deleteChat(currentChat.id);
-    }
-  };
-
-  const handleRenameChat = (newTitle: string) => {
-    if (currentChat) {
-      renameChat(currentChat.id, newTitle);
-    }
-  };
+  const {
+    renameDialogOpen,
+    setRenameDialogOpen,
+    handleFavouriteCurrentChat,
+    handleDeleteCurrentChat,
+    handleRenameCurrentChat,
+  } = useChatManager();
 
   return (
     <div className="border-border flex w-full items-center justify-between p-4">
@@ -51,7 +37,7 @@ export default function Header() {
                 <MoreHorizontal className="h-5 w-5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent side="bottom" align="end">
-                <DropdownMenuItem onClick={handleFavouriteChat}>
+                <DropdownMenuItem onClick={handleFavouriteCurrentChat}>
                   <Star className="mr-2 h-4 w-4 text-amber-500" />
                   <span>
                     {currentChat.isFavourite ? "Unfavourite" : "Favourite"}
@@ -61,7 +47,7 @@ export default function Header() {
                   <PenSquare className="mr-2 h-4 w-4" />
                   <span>Rename</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDeleteChat}>
+                <DropdownMenuItem onClick={handleDeleteCurrentChat}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   <span>Remove</span>
                 </DropdownMenuItem>
@@ -78,7 +64,7 @@ export default function Header() {
           open={renameDialogOpen}
           onOpenChange={setRenameDialogOpen}
           currentName={currentChat.title}
-          onRename={handleRenameChat}
+          onRename={handleRenameCurrentChat}
         />
       )}
     </div>

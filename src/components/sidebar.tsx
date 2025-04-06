@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useChatManager } from "@/hooks/use-chat-manager";
 import { useChatStore } from "@/store/chat-store";
 import { useDbConnectionStore } from "@/store/db-connection-store";
 import {
@@ -22,7 +23,6 @@ import {
   Star,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
 import { RenameDialog } from "./rename-chat-dialog";
 import {
   DropdownMenu,
@@ -32,14 +32,17 @@ import {
 } from "./ui/dropdown-menu";
 
 export const AppSidebar = () => {
+  const { chats, setCurrentChatId, createNewChat, favouriteChat } =
+    useChatStore();
+
   const {
-    chats,
-    setCurrentChatId,
-    createNewChat,
-    deleteChat,
-    favouriteChat,
-    renameChat,
-  } = useChatStore();
+    renameDialogOpen,
+    setRenameDialogOpen,
+    chatToRename,
+    handleDeleteChat,
+    handleOpenRenameDialog,
+    handleRenameSubmit,
+  } = useChatManager();
 
   const { connections, getSelectedConnection, setSelectedConnectionId } =
     useDbConnectionStore();
@@ -51,35 +54,8 @@ export const AppSidebar = () => {
     createNewChat();
   };
 
-  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
-  const [chatToRename, setChatToRename] = useState<{
-    id: string;
-    title: string;
-  } | null>(null);
-
   const handleSelectChat = (chatId: string) => {
     setCurrentChatId(chatId);
-  };
-
-  const handleDeleteChat = (e: React.MouseEvent, chatId: string) => {
-    e.stopPropagation();
-    deleteChat(chatId);
-  };
-
-  const handleOpenRenameDialog = (
-    e: React.MouseEvent,
-    chat: { id: string; title: string },
-  ) => {
-    e.stopPropagation();
-    setChatToRename(chat);
-    setRenameDialogOpen(true);
-  };
-
-  const handleRenameChat = (newTitle: string) => {
-    if (chatToRename) {
-      renameChat(chatToRename.id, newTitle);
-      setChatToRename(null);
-    }
   };
 
   // Filter chats into favourite and non-favourite
@@ -248,7 +224,7 @@ export const AppSidebar = () => {
           open={renameDialogOpen}
           onOpenChange={setRenameDialogOpen}
           currentName={chatToRename.title}
-          onRename={handleRenameChat}
+          onRename={handleRenameSubmit}
         />
       )}
     </>
