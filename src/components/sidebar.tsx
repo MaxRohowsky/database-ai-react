@@ -59,9 +59,9 @@ export const AppSidebar = () => {
 
   return (
     <>
-      <Sidebar className="drop-shadow-sm">
+      <Sidebar className="border-t drop-shadow-sm">
         <SidebarHeader>
-          <div className="mb-4 flex items-center">
+          <div className="my-3 ml-1 flex items-center">
             <h1 className="text-xl font-medium text-neutral-800">OtterDB</h1>
           </div>
 

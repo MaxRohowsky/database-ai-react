@@ -5,12 +5,12 @@ import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 
 export function App() {
   return (
-    <SidebarProvider>
+    <SidebarProvider className="border-t">
       <AppSidebar />
 
       {/* Main Content */}
       <main className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex w-full items-center justify-between border-b">
+        <div className="flex w-full items-center justify-between">
           <SidebarTrigger className="bg-secondary m-4 h-8 w-8" />
           <Header />
         </div>
