@@ -31,19 +31,9 @@ import {
 } from "./ui/dropdown-menu";
 
 export const AppSidebar = () => {
-  const { chats, setCurrentChatId, createNewChat } = useChatStore();
+  const { chats, setCurrentChatId } = useChatStore();
 
   const { RenameChatDialog } = useRenameChatDialog();
-
-  const { connections, getSelectedConnection, setSelectedConnectionId } =
-    useDbConnectionStore();
-
-  const selectedConnection = getSelectedConnection();
-
-  const handleCreateChatWithConnection = (connectionId: string) => {
-    setSelectedConnectionId(connectionId);
-    createNewChat();
-  };
 
   // Filter chats into favourite and non-favourite
   const favouriteChats = chats.filter((chat) => chat.isFavourite);
@@ -56,52 +46,8 @@ export const AppSidebar = () => {
           <div className="my-3 ml-1 flex items-center">
             <h1 className="text-xl font-medium text-neutral-800">OtterDB</h1>
           </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger className="w-full" asChild>
-              <Button
-                variant="ghost"
-                className="flex w-full items-center justify-start bg-blue-50 px-2 hover:bg-blue-100"
-              >
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white">
-                  <Plus className="h-3.5 w-3.5 text-blue-500" />
-                </div>
-                New chat
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              sideOffset={5}
-              className="w-[var(--radix-dropdown-menu-trigger-width)]"
-            >
-              <DropdownMenuItem onClick={() => createNewChat()}>
-                <Database className="mr-2 h-4 w-4" />
-                <span>
-                  {selectedConnection
-                    ? `Use ${selectedConnection.name}`
-                    : "Use default connection"}
-                </span>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                className="text-muted-foreground px-2 py-1 text-xs"
-                disabled
-              >
-                Or select database:
-              </DropdownMenuItem>
-
-              {connections.map((conn) => (
-                <DropdownMenuItem
-                  key={conn.id}
-                  onClick={() => handleCreateChatWithConnection(conn.id)}
-                >
-                  <Database className="mr-2 h-4 w-4" />
-                  <span>{conn.name}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
         </SidebarHeader>
+        <NewChatButton />
         <SidebarContent className="">
           <SidebarMenu>
             <SidebarGroup>
@@ -204,6 +150,67 @@ function ChatItemDropdown({ chat }: { chat: Chat }) {
           <Trash2 className="mr-2 h-4 w-4" />
           <span>Remove</span>
         </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function NewChatButton() {
+  const { createNewChat } = useChatStore();
+
+  const { connections, getSelectedConnection, setSelectedConnectionId } =
+    useDbConnectionStore();
+
+  const selectedConnection = getSelectedConnection();
+
+  const handleCreateChatWithConnection = (connectionId: string) => {
+    setSelectedConnectionId(connectionId);
+    createNewChat();
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="w-full" asChild>
+        <Button
+          variant="ghost"
+          className="flex w-full items-center justify-start bg-blue-50 px-2 hover:bg-blue-100"
+        >
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white">
+            <Plus className="h-3.5 w-3.5 text-blue-500" />
+          </div>
+          New chat
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        sideOffset={5}
+        className="w-[var(--radix-dropdown-menu-trigger-width)]"
+      >
+        <DropdownMenuItem onClick={() => createNewChat()}>
+          <Database className="mr-2 h-4 w-4" />
+          <span>
+            {selectedConnection
+              ? `Use ${selectedConnection.name}`
+              : "Use default connection"}
+          </span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          className="text-muted-foreground px-2 py-1 text-xs"
+          disabled
+        >
+          Or select database:
+        </DropdownMenuItem>
+
+        {connections.map((conn) => (
+          <DropdownMenuItem
+            key={conn.id}
+            onClick={() => handleCreateChatWithConnection(conn.id)}
+          >
+            <Database className="mr-2 h-4 w-4" />
+            <span>{conn.name}</span>
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
