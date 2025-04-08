@@ -98,9 +98,11 @@ export function DbChatMessage({
   const isEditing = editingSqlId === message.id;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <h3 className="text-sm font-medium">Generated SQL</h3>
+    <Card className="overflow-hidden border border-slate-200 shadow-sm dark:border-slate-800">
+      <CardHeader className="flex flex-row items-center justify-between bg-slate-50/80 pb-2 dark:bg-slate-900/30">
+        <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          Generated SQL
+        </h3>
         {!isEditing && (
           <Button
             variant="ghost"
@@ -108,13 +110,13 @@ export function DbChatMessage({
             onClick={() =>
               startEditingSql(message.id, message.content as string)
             }
-            className="h-6 w-6"
+            className="h-6 w-6 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800"
           >
-            <Edit className="h-3.5 w-3.5" />
+            <Edit className="h-3.5 w-3.5 text-slate-500" />
           </Button>
         )}
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         {isEditing ? (
           <SqlEditor
             content={editedSqlContent}
@@ -124,7 +126,7 @@ export function DbChatMessage({
           />
         ) : (
           <pre
-            className="bg-muted cursor-pointer overflow-auto rounded-md p-4 text-sm"
+            className="cursor-pointer overflow-auto rounded-none bg-slate-50 p-4 font-mono text-sm text-slate-700 dark:bg-slate-900/50 dark:text-slate-300"
             onClick={() =>
               startEditingSql(message.id, message.content as string)
             }
@@ -133,7 +135,7 @@ export function DbChatMessage({
           </pre>
         )}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="bg-slate-50/80 py-3 dark:bg-slate-900/30">
         <Button
           onClick={() =>
             executeQuery(
@@ -141,17 +143,18 @@ export function DbChatMessage({
             )
           }
           disabled={!dbConfig || isLoading}
-          className="mr-2"
+          className="group rounded-full px-4 transition-all"
+          variant={isLoading ? "secondary" : "default"}
         >
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Executing...
+              <span className="text-xs font-medium">Executing...</span>
             </>
           ) : (
             <>
-              <Play className="mr-2 h-4 w-4" />
-              Execute
+              <Play className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
+              <span className="text-xs font-medium">Execute</span>
             </>
           )}
         </Button>
@@ -173,7 +176,7 @@ function SqlEditor({
 }) {
   return (
     <Textarea
-      className="sql-edit-area bg-muted min-h-[100px] font-mono text-sm"
+      className="sql-edit-area min-h-[100px] rounded-none border-0 bg-slate-50 p-4 font-mono text-sm focus:ring-1 focus:ring-blue-400 dark:bg-slate-900/50 dark:text-slate-300"
       value={content}
       onChange={(e) => setContent(e.target.value)}
       autoFocus
