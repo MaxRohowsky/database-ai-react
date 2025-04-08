@@ -9,6 +9,9 @@ export interface ChatMessage {
   error?: string;
   affectedRows?: number;
   originalQuery?: string;
+  showExactCount?: boolean;
+  returningRows?: Record<string, unknown>[];
+  returningColumns?: string[];
 }
 
 export interface Chat {

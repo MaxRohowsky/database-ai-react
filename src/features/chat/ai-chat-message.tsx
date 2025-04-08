@@ -56,6 +56,9 @@ export function DbChatMessage({
     setError(null);
 
     try {
+      // Check if this query has a RETURNING clause (PostgreSQL feature)
+      const hasReturningClause = /\bRETURNING\b/i.test(sqlQuery);
+
       const result = await executeSqlQuery(sqlQuery, dbConfig);
       if (result.error) {
         throw new Error(result.error);
@@ -67,19 +70,33 @@ export function DbChatMessage({
           sqlQuery.trim(),
         );
 
-      // Add result message to store
-      addMessageToCurrentChat({
-        type: "result",
-        content: result.rows || [],
-        columns: result.columns || [],
-        // If it's a modification query with zero rows returned, likely affected rows
-        affectedRows:
-          isModification && result.rows?.length === 0
-            ? result.affectedRows
-            : undefined,
-        // Store the original query for reference
-        originalQuery: sqlQuery,
-      });
+      // If query has RETURNING clause and returned data, we can store it directly
+      if (hasReturningClause && result.rows && result.rows.length > 0) {
+        // Add result message to store with special RETURNING data
+        addMessageToCurrentChat({
+          type: "result",
+          content: [], // Leave content empty to trigger the "Database Modified" view
+          columns: [],
+          affectedRows: result.rows.length,
+          originalQuery: sqlQuery,
+          returningRows: result.rows,
+          returningColumns: result.columns,
+        });
+      } else {
+        // Normal query processing (as before)
+        addMessageToCurrentChat({
+          type: "result",
+          content: result.rows || [],
+          columns: result.columns || [],
+          // If it's a modification query with zero rows returned, likely affected rows
+          affectedRows:
+            isModification && result.rows?.length === 0
+              ? result.affectedRows
+              : undefined,
+          // Store the original query for reference
+          originalQuery: sqlQuery,
+        });
+      }
     } catch (err) {
       console.error("SQL execution error:", err);
       setError(

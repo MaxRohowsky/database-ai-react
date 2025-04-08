@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { executeSqlQuery, fetchDatabaseSchema } from "@/services/sqlService";
+import { executeSqlQuery } from "@/services/sqlService";
 import { ChatMessage } from "@/store/chat-store";
 import { useDbConnectionStore } from "@/store/db-connection-store";
 import { Check, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export function ResultChatMessage({ message }: { message: ChatMessage }) {
   // Check if the message indicates a database change instead of a data retrieval
@@ -94,13 +94,6 @@ function isModificationQuery(message: ChatMessage): boolean {
   return false;
 }
 
-// Interface for the schema information
-interface SchemaTable {
-  name: string;
-  schema: string;
-  columns: string[];
-}
-
 // Component to display database changes in a user-friendly way
 function DatabaseChangeMessage({ message }: { message: ChatMessage }) {
   const { getSelectedConnection } = useDbConnectionStore();
@@ -108,73 +101,11 @@ function DatabaseChangeMessage({ message }: { message: ChatMessage }) {
   const [updatedData, setUpdatedData] = useState<ChatMessage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dbSchema, setDbSchema] = useState<Record<string, SchemaTable>>({});
-  const [schemaLoaded, setSchemaLoaded] = useState(false);
 
   // Extract affected rows count if available
   const affectedRows = message.affectedRows;
 
-  // Fetch schema information when component mounts
-  useEffect(() => {
-    if (dbConfig && !schemaLoaded) {
-      loadDatabaseSchema();
-    }
-  }, [dbConfig]);
-
-  // Load database schema
-  const loadDatabaseSchema = async () => {
-    if (!dbConfig) return;
-
-    try {
-      const result = await fetchDatabaseSchema(dbConfig);
-
-      if (result.error) {
-        console.error("Error fetching schema:", result.error);
-        return;
-      }
-
-      if (result.schema) {
-        // Parse the schema string into a more usable format
-        const schemaMap: Record<string, SchemaTable> = {};
-        const lines = result.schema.split("\n");
-
-        let currentTable: SchemaTable | null = null;
-
-        for (const line of lines) {
-          // Match table line like "Table: public.user"
-          const tableMatch = line.match(/Table: ([^.]+)\.([^\s]+)/);
-          if (tableMatch) {
-            const schema = tableMatch[1];
-            const name = tableMatch[2];
-            currentTable = {
-              schema,
-              name,
-              columns: [],
-            };
-            schemaMap[`${schema}.${name}`] = currentTable;
-            continue;
-          }
-
-          // Match column lines like "  - email (character varying, nullable)"
-          if (currentTable && line.trim().startsWith("-")) {
-            const colMatch = line.match(/- ([^\s(]+)/);
-            if (colMatch) {
-              currentTable.columns.push(colMatch[1]);
-            }
-          }
-        }
-
-        console.log("Parsed schema:", schemaMap);
-        setDbSchema(schemaMap);
-      }
-    } catch (err) {
-      console.error("Error processing schema:", err);
-    } finally {
-      setSchemaLoaded(true);
-    }
-  };
-
-  // Generate a SELECT query based on the modification query
+  // Fetch the affected rows
   const fetchUpdatedData = async () => {
     if (!dbConfig) {
       setError("Database connection not available");
@@ -185,290 +116,125 @@ function DatabaseChangeMessage({ message }: { message: ChatMessage }) {
     setError(null);
 
     try {
-      // First try to use the stored originalQuery if available
-      let sqlText = message.originalQuery || "";
-
-      // If originalQuery isn't available, try to find the SQL message in the DOM
-      if (!sqlText) {
-        const sqlMessageId = parseInt(message.id) - 1;
-        const sqlMessageElement = document.getElementById(
-          `sql-message-${sqlMessageId}`,
-        );
-        if (sqlMessageElement) {
-          sqlText = sqlMessageElement.textContent || "";
-        }
+      // Check if there are already results in the message
+      // This would happen when using RETURNING clause
+      if (message.returningRows && message.returningColumns) {
+        setUpdatedData({
+          id: "updated-data",
+          type: "result",
+          content: message.returningRows,
+          columns: message.returningColumns,
+          showExactCount: true,
+        });
+        return;
       }
 
-      if (!sqlText) {
+      // Get the original query to modify
+      const originalQuery = message.originalQuery || "";
+      if (!originalQuery) {
         setError("Could not find the original query");
         return;
       }
 
-      console.log("Original SQL:", sqlText);
+      // For PostgreSQL, we could modify the query to use RETURNING *
+      // But since we already executed it, let's do a separate query
 
-      // Parse the SQL to determine what table was affected and construct a SELECT
-      // Handle common SQL patterns for different statement types
-      let tableMatch = sqlText.match(
-        /^\s*(UPDATE|INSERT\s+INTO|DELETE\s+FROM)\s+([^\s(]+)/i,
-      );
+      // First, determine the type of modification (UPDATE, INSERT, DELETE)
+      const isUpdate = /^\s*UPDATE/i.test(originalQuery);
+      const isInsert = /^\s*INSERT/i.test(originalQuery);
+      const isDelete = /^\s*DELETE/i.test(originalQuery);
 
-      // If the standard pattern doesn't match, try more specific patterns
-      if (!tableMatch) {
-        if (/UPDATE/i.test(sqlText)) {
-          tableMatch = sqlText.match(/UPDATE\s+([^\s]+)/i);
-          if (tableMatch) tableMatch = ["", "UPDATE", tableMatch[1]];
-        } else if (/INSERT/i.test(sqlText)) {
-          tableMatch = sqlText.match(/INSERT\s+INTO\s+([^\s(]+)/i);
-          if (tableMatch) tableMatch = ["", "INSERT INTO", tableMatch[1]];
-        } else if (/DELETE/i.test(sqlText)) {
-          tableMatch = sqlText.match(/DELETE\s+FROM\s+([^\s(]+)/i);
-          if (tableMatch) tableMatch = ["", "DELETE FROM", tableMatch[1]];
-        }
-      }
-
-      // Try to extract the full WHERE clause, including quoted values
-      // This regex captures everything between WHERE and semicolon/end, handling quotes properly
-      const whereClauseRegex = /WHERE\s+(.*?)(?:;|\s*$)/is;
-      const whereMatch = sqlText.match(whereClauseRegex);
-
-      if (!tableMatch) {
-        setError("Could not determine the affected table");
+      // For DELETE, we can't show the affected rows since they're gone
+      if (isDelete) {
+        setError("Cannot show rows that were deleted");
+        setIsLoading(false);
         return;
       }
 
-      const action = tableMatch[1].toUpperCase().trim();
-      let table = tableMatch[2].trim();
-      let schema = "public"; // Default schema
+      // We'll extract the table name and WHERE clause from the original query
+      let tableName: string | null = null;
+      let whereClause: string | null = null;
 
-      // Check if table includes a schema prefix like "public.user"
-      if (table.includes(".")) {
-        const parts = table.split(".");
-        schema = parts[0];
-        table = parts[1];
+      if (isUpdate) {
+        // Extract table from UPDATE clause
+        const tableMatch = originalQuery.match(/UPDATE\s+([^\s]+)/i);
+        if (tableMatch) tableName = tableMatch[1];
+
+        // Extract WHERE clause
+        const whereMatch = originalQuery.match(/WHERE\s+(.+?)(?:;|\s*$)/is);
+        if (whereMatch) whereClause = whereMatch[1].trim();
+      } else if (isInsert) {
+        // Extract table from INSERT INTO clause
+        const tableMatch = originalQuery.match(/INSERT\s+INTO\s+([^\s(]+)/i);
+        if (tableMatch) tableName = tableMatch[1];
+
+        // For INSERT, we need to extract the values being inserted
+        // This is complex, so let's use a simple approach:
+        // If PostgreSQL supports RETURNING but we didn't use it,
+        // we can just get the last inserted row(s)
+        whereClause = null; // We'll use ORDER BY for inserts
       }
 
-      // Use the schema information to get the fully qualified table name
-      let fullyQualifiedTable = `${schema}.${table}`;
-
-      // Check if this table exists in our schema
-      if (
-        !Object.keys(dbSchema).some(
-          (key) => key.toLowerCase() === fullyQualifiedTable.toLowerCase(),
-        )
-      ) {
-        // Try to find the table with case-insensitive matching
-        const possibleMatch = Object.keys(dbSchema).find(
-          (key) => key.toLowerCase().split(".")[1] === table.toLowerCase(),
-        );
-
-        if (possibleMatch) {
-          fullyQualifiedTable = possibleMatch;
-          const parts = possibleMatch.split(".");
-          schema = parts[0];
-          table = parts[1];
-        }
+      if (!tableName) {
+        setError("Could not determine the affected table");
+        setIsLoading(false);
+        return;
       }
 
-      console.log("Using table:", fullyQualifiedTable);
+      // Build a query to fetch the affected rows
+      let selectQuery = "";
 
-      // Extract where clause, cleaning up any trailing characters
-      let whereClause = "";
-      if (whereMatch && whereMatch[1]) {
-        whereClause = whereMatch[1].trim();
-        // Remove trailing semicolons
-        whereClause = whereClause.replace(/;$/, "").trim();
+      if (isUpdate && whereClause) {
+        // For UPDATE, use the exact same WHERE clause to get the updated rows
+        selectQuery = `SELECT * FROM ${tableName} WHERE ${whereClause} LIMIT ${affectedRows || 10}`;
+        console.log("Using original WHERE clause:", selectQuery);
+      } else if (isInsert) {
+        // For INSERT, try to get the most recently inserted row(s)
+        // First try common primary key columns in descending order
+        selectQuery = `SELECT * FROM ${tableName} ORDER BY CASE 
+          WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = '${getTableNameWithoutSchema(tableName)}' AND column_name = 'id') THEN id 
+          WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = '${getTableNameWithoutSchema(tableName)}' AND column_name = 'created_at') THEN NULL
+          ELSE NULL END DESC NULLS LAST LIMIT ${affectedRows || 10}`;
+        console.log("Using insertion order query:", selectQuery);
       }
-
-      console.log("Extracted table:", table);
-      console.log("Extracted schema:", schema);
-      console.log("Extracted WHERE clause:", whereClause);
-
-      // For UPDATE queries, try a direct approach - use the same WHERE clause
-      // but with the schema-qualified table name
-      if (action.includes("UPDATE") || action.includes("INSERT")) {
-        try {
-          const schemaQualifiedQuery = `SELECT * FROM ${fullyQualifiedTable}${whereClause ? ` WHERE ${whereClause}` : ""} LIMIT 10`;
-          console.log(
-            "Attempting schema-qualified query:",
-            schemaQualifiedQuery,
-          );
-
-          const result = await executeSqlQuery(schemaQualifiedQuery, dbConfig);
-
-          if (!result.error && result.rows && result.rows.length > 0) {
-            setUpdatedData({
-              id: "updated-data",
-              type: "result",
-              content: result.rows || [],
-              columns: result.columns || [],
-            });
-            return;
-          }
-        } catch (directErr) {
-          console.error(
-            "Schema-qualified query failed, trying fallback approach:",
-            directErr,
-          );
-          // Continue with fallback approach
-        }
-      }
-
-      // Fallback approach - try to extract conditions from the WHERE clause
-      // Extract column names and values from the WHERE clause
-      const conditions: [string, string][] = [];
-
-      // Try to extract condition from UPDATE email = 'value' WHERE email = 'value'
-      if (action.includes("UPDATE")) {
-        // Extract SET clause
-        const setMatch = sqlText.match(/SET\s+(.*?)(?:WHERE|;|\s*$)/i);
-        if (setMatch && setMatch[1]) {
-          // Parse assignments like "column1 = 'value1', column2 = value2"
-          const assignments = setMatch[1].split(",").map((part) => part.trim());
-
-          for (const assignment of assignments) {
-            const [column, value] = assignment.split("=").map((p) => p.trim());
-
-            // If we have both column and value, use it in our query
-            if (column && value) {
-              // Keep only the column name without quotes
-              const cleanColumn = column.replace(/['"]/g, "");
-              conditions.push([cleanColumn, value]);
-            }
-          }
-        }
-      }
-
-      // Always try to extract from WHERE clause as well
-      if (whereClause) {
-        // Handle AND/OR conditions
-        const parts = whereClause.split(/\s+AND\s+/i);
-        for (const part of parts) {
-          // Match column = value pattern
-          const condMatch = part.match(/([^\s=]+)\s*=\s*([^;\s]+)/);
-          if (condMatch) {
-            // Extract column name and value
-            const column = condMatch[1].trim().replace(/['"]/g, "");
-            const value = condMatch[2].trim();
-
-            // Handle quoted values, ensuring quotes are preserved
-            if (
-              (value.startsWith("'") && value.endsWith("'")) ||
-              (value.startsWith('"') && value.endsWith('"'))
-            ) {
-              // Keep quotes for string values
-              conditions.push([column, value]);
-            } else {
-              // Add quotes for bare values that look like strings
-              conditions.push([column, value]);
-            }
-          }
-        }
-      }
-
-      // Build a new SELECT query with the extracted conditions
-      // Using the schema-qualified table name
-      let selectQuery = `SELECT * FROM ${fullyQualifiedTable}`;
-      if (conditions.length > 0) {
-        selectQuery += " WHERE ";
-        selectQuery += conditions
-          .map(([col, val]) => `${col} = ${val}`)
-          .join(" AND ");
-      }
-      selectQuery += " LIMIT 10";
-
-      console.log("Final query for updated data:", selectQuery);
 
       // Execute the query
       const result = await executeSqlQuery(selectQuery, dbConfig);
 
+      // Handle possible SQL errors
       if (result.error) {
-        // Try one more fallback - use original WHERE clause without parsing
-        if (whereClause) {
-          const rawFallbackQuery = `SELECT * FROM ${fullyQualifiedTable} WHERE ${whereClause} LIMIT 10`;
-          console.log(
-            "Trying raw fallback query with original WHERE:",
-            rawFallbackQuery,
-          );
-
-          try {
-            const rawFallbackResult = await executeSqlQuery(
-              rawFallbackQuery,
-              dbConfig,
-            );
-
-            if (
-              !rawFallbackResult.error &&
-              rawFallbackResult.rows &&
-              rawFallbackResult.rows.length > 0
-            ) {
-              setUpdatedData({
-                id: "updated-data",
-                type: "result",
-                content: rawFallbackResult.rows || [],
-                columns: rawFallbackResult.columns || [],
-              });
-              return;
-            }
-          } catch (fallbackErr) {
-            console.error("Raw fallback query also failed:", fallbackErr);
-          }
-        }
-
-        // Final fallback: Try without schema prefix
-        const noSchemaQuery = `SELECT * FROM ${table}${whereClause ? ` WHERE ${whereClause}` : ""} LIMIT 10`;
-        console.log("Trying query without schema:", noSchemaQuery);
+        // Try a simpler fallback query just getting rows from the table
+        const fallbackQuery = `SELECT * FROM ${tableName} LIMIT ${affectedRows || 10}`;
+        console.log("Trying fallback simple query:", fallbackQuery);
 
         try {
-          const noSchemaResult = await executeSqlQuery(noSchemaQuery, dbConfig);
+          const fallbackResult = await executeSqlQuery(fallbackQuery, dbConfig);
 
           if (
-            !noSchemaResult.error &&
-            noSchemaResult.rows &&
-            noSchemaResult.rows.length > 0
+            !fallbackResult.error &&
+            fallbackResult.rows &&
+            fallbackResult.rows.length > 0
           ) {
             setUpdatedData({
               id: "updated-data",
               type: "result",
-              content: noSchemaResult.rows || [],
-              columns: noSchemaResult.columns || [],
+              content: fallbackResult.rows,
+              columns: fallbackResult.columns || [],
+              // Not showing exact count since it's a fallback
+              showExactCount: false,
             });
             return;
           }
-        } catch (noSchemaErr) {
-          console.error("No-schema query also failed:", noSchemaErr);
+        } catch (fallbackErr) {
+          console.error("Fallback query error:", fallbackErr);
         }
 
-        // If all attempts failed, show the original error
         throw new Error(`${result.error} (Query: ${selectQuery})`);
       }
 
-      // Check if we got any results back
+      // Check if we got any results
       if (!result.rows || result.rows.length === 0) {
-        // If we couldn't get results with our WHERE clause, try just the table
-        const fallbackQuery = `SELECT * FROM ${fullyQualifiedTable} LIMIT 10`;
-        console.log(
-          "Trying fallback query without WHERE clause:",
-          fallbackQuery,
-        );
-
-        const fallbackResult = await executeSqlQuery(fallbackQuery, dbConfig);
-
-        if (
-          fallbackResult.error ||
-          !fallbackResult.rows ||
-          fallbackResult.rows.length === 0
-        ) {
-          setError("No data found matching the query criteria");
-          return;
-        }
-
-        // Use the fallback result
-        setUpdatedData({
-          id: "updated-data",
-          type: "result",
-          content: fallbackResult.rows || [],
-          columns: fallbackResult.columns || [],
-        });
+        setError("No data found matching the query criteria");
         return;
       }
 
@@ -476,8 +242,9 @@ function DatabaseChangeMessage({ message }: { message: ChatMessage }) {
       setUpdatedData({
         id: "updated-data",
         type: "result",
-        content: result.rows || [],
+        content: result.rows,
         columns: result.columns || [],
+        showExactCount: affectedRows === 1,
       });
     } catch (err) {
       console.error("Error fetching updated data:", err);
@@ -537,11 +304,19 @@ function DatabaseChangeMessage({ message }: { message: ChatMessage }) {
       {updatedData && updatedData.content && (
         <div className="border-t border-green-100 dark:border-green-900/30">
           <div className="border-b border-slate-200 bg-slate-50 p-2 text-xs font-medium text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-            Updated Data
+            {updatedData.showExactCount && affectedRows !== undefined
+              ? `Updated Row${affectedRows === 1 ? "" : `s (${affectedRows} affected)`}`
+              : "Updated Data"}
           </div>
           <ResultsTable message={updatedData} />
         </div>
       )}
     </div>
   );
+}
+
+// Helper function to extract table name without schema
+function getTableNameWithoutSchema(fullTableName: string): string {
+  const parts = fullTableName.split(".");
+  return parts.length > 1 ? parts[1] : parts[0];
 }
