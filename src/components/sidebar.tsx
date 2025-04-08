@@ -22,13 +22,17 @@ import {
   Star,
   Trash2,
 } from "lucide-react";
+import { useAddDbConnectionModal } from "./add-db-connection-dialog";
 import { useRenameChatDialog } from "./rename-chat-dialog";
+import { SidebarGroupLabelWithIcon } from "./sidebar-icon";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { Separator } from "./ui/separator";
 
 export const AppSidebar = () => {
   const { RenameChatDialog } = useRenameChatDialog();
@@ -93,10 +97,10 @@ function ChatItemDropdown({ chat }: { chat: Chat }) {
 function NewChatButton() {
   const { createNewChat } = useChatStore();
 
-  const { connections, getSelectedConnection, setSelectedConnectionId } =
-    useDbConnectionStore();
+  const { connections, setSelectedConnectionId } = useDbConnectionStore();
 
-  const selectedConnection = getSelectedConnection();
+  const { setShowAddDbConnectionDialog, AddDbConnectionModal } =
+    useAddDbConnectionModal();
 
   const handleCreateChatWithConnection = (connectionId: string) => {
     setSelectedConnectionId(connectionId);
@@ -108,12 +112,13 @@ function NewChatButton() {
       <DropdownMenuTrigger className="w-full" asChild>
         <Button
           variant="ghost"
-          className="flex w-full items-center justify-start bg-blue-50 px-2 hover:bg-blue-100"
+          className="flex h-12 w-full items-center justify-start rounded-none hover:bg-red-100"
         >
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white">
-            <Plus className="h-3.5 w-3.5 text-blue-500" />
-          </div>
-          New chat
+          <SidebarGroupLabelWithIcon
+            icon={Plus}
+            label="New chat"
+            variant="red"
+          />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -121,32 +126,30 @@ function NewChatButton() {
         sideOffset={5}
         className="w-[var(--radix-dropdown-menu-trigger-width)]"
       >
-        <DropdownMenuItem onClick={() => createNewChat()}>
-          <Database className="mr-2 h-4 w-4" />
-          <span>
-            {selectedConnection
-              ? `Use ${selectedConnection.name}`
-              : "Use default connection"}
-          </span>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem
-          className="text-muted-foreground px-2 py-1 text-xs"
-          disabled
-        >
-          Or select database:
-        </DropdownMenuItem>
+        <DropdownMenuLabel>Select Database:</DropdownMenuLabel>
 
         {connections.map((conn) => (
           <DropdownMenuItem
             key={conn.id}
+            className="m-1"
             onClick={() => handleCreateChatWithConnection(conn.id)}
           >
-            <Database className="mr-2 h-4 w-4" />
+            <Database className="m-1 h-4 w-4" />
             <span>{conn.name}</span>
           </DropdownMenuItem>
         ))}
+
+        <Separator />
+
+        <DropdownMenuItem
+          className="m-1"
+          onClick={() => setShowAddDbConnectionDialog(true)}
+        >
+          <Database className="m-1 h-4 w-4" />
+          <span>Add new connection</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
+      <AddDbConnectionModal />
     </DropdownMenu>
   );
 }
@@ -158,10 +161,11 @@ function FavouriteChats() {
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="text-black">
-        <div className="mr-2 flex h-7 w-7 items-center justify-center rounded-lg border border-amber-100 bg-amber-50 shadow-sm">
-          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-        </div>
-        <span className="text-sm font-medium">Favourites</span>
+        <SidebarGroupLabelWithIcon
+          icon={Star}
+          label="Favourites"
+          variant="amber"
+        />
       </SidebarGroupLabel>
       {favouriteChats.length > 0 ? (
         favouriteChats.map((chat) => (
@@ -174,9 +178,7 @@ function FavouriteChats() {
                 <div className="mr-2 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
                   <MessageCircle className="h-3 w-3 text-blue-500" />
                 </div>
-                <span className="truncate font-medium text-gray-700">
-                  {chat.title}
-                </span>
+                <span className="text-base text-gray-700">{chat.title}</span>
               </div>
             </SidebarMenuButton>
             <ChatItemDropdown chat={chat} />
@@ -198,10 +200,11 @@ function RecentChats() {
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="text-black">
-        <div className="mr-2 flex h-7 w-7 items-center justify-center rounded-lg border border-blue-100 bg-blue-50 shadow-sm">
-          <MessageCircle className="h-3.5 w-3.5 text-blue-500" />
-        </div>
-        <span className="text-sm font-medium">Recent Chats</span>
+        <SidebarGroupLabelWithIcon
+          icon={MessageCircle}
+          label="Recent Chats"
+          variant="blue"
+        />
       </SidebarGroupLabel>
       <SidebarGroupContent>
         {recentChats.length > 0 ? (
@@ -211,7 +214,7 @@ function RecentChats() {
               key={chat.id}
             >
               <SidebarMenuButton onClick={() => setCurrentChatId(chat.id)}>
-                <span>{chat.title}</span>
+                <span className="text-base text-gray-700">{chat.title}</span>
               </SidebarMenuButton>
               <ChatItemDropdown chat={chat} />
             </SidebarMenuItem>
