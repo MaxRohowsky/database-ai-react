@@ -80,8 +80,14 @@ function ChatItemDropdown({ chat }: { chat: Chat }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent side="right" align="start">
           <DropdownMenuItem onClick={() => favouriteChat(chat.id)}>
-            <Star className="mr-2 h-4 w-4 text-amber-500" />
-            <span>Favourite</span>
+            <Star
+              className={`mr-2 h-4 w-4 ${
+                chat.isFavourite
+                  ? "fill-none text-amber-500"
+                  : "fill-amber-500 text-amber-500"
+              }`}
+            />
+            {chat.isFavourite ? "Unfavourite" : "Favourite"}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
@@ -269,30 +275,38 @@ function FavouriteChats() {
           variant="amber"
         />
       </SidebarGroupLabel>
-      {favouriteChats.length > 0 ? (
-        favouriteChats.map((chat) => (
-          <SidebarMenuItem className="py-[0.5px]" key={chat.id}>
-            <SidebarMenuButton
-              onClick={() => setCurrentChatId(chat.id)}
-              className={`rounded-none transition-colors ${
-                currentChatId === chat.id ? "bg-amber-100" : "hover:bg-gray-100"
+      <SidebarGroupContent className="my-2">
+        {favouriteChats.length > 0 ? (
+          favouriteChats.map((chat) => (
+            <SidebarMenuItem
+              className={`ml-8 border-l border-amber-200 p-1 py-[0.5px] ${
+                currentChatId === chat.id
+                  ? "bg-amber-100"
+                  : "hover:bg-amber-100 active:bg-amber-100"
               }`}
+              key={chat.id}
             >
-              <div className="flex items-center">
-                <div className="mr-2 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
-                  <MessageCircle className="h-3 w-3 text-blue-500" />
-                </div>
-                <span className="text-base text-gray-700">{chat.title}</span>
-              </div>
-            </SidebarMenuButton>
-            <ChatItemDropdown chat={chat} />
-          </SidebarMenuItem>
-        ))
-      ) : (
-        <div className="text-muted-foreground px-3 py-2 text-sm">
-          No favourites yet
-        </div>
-      )}
+              <SidebarMenuButton
+                onClick={() => setCurrentChatId(chat.id)}
+                className={`m-0 rounded-none p-0 ${
+                  currentChatId === chat.id
+                    ? "bg-amber-100 hover:bg-amber-100"
+                    : "hover:bg-amber-100 active:bg-amber-100"
+                }`}
+              >
+                <span className="px-2 text-base text-gray-700">
+                  {chat.title}
+                </span>
+              </SidebarMenuButton>
+              <ChatItemDropdown chat={chat} />
+            </SidebarMenuItem>
+          ))
+        ) : (
+          <div className="text-muted-foreground px-3 py-2 text-sm">
+            No favourites yet
+          </div>
+        )}
+      </SidebarGroupContent>
     </SidebarGroup>
   );
 }
