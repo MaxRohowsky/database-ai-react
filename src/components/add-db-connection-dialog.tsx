@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   ConnectionDetails,
   useDbConnectionStore,
@@ -23,6 +24,16 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel } from "./ui/form";
 import { Input } from "./ui/input";
 
+const emptyValues = {
+  id: "",
+  name: "",
+  host: "",
+  port: "",
+  database: "",
+  user: "",
+  password: "",
+};
+
 function AddDbConnectionModal({
   showAddDbConnectionDialog,
   setShowAddDbConnectionDialog,
@@ -36,20 +47,15 @@ function AddDbConnectionModal({
   const [connectionStatus, setConnectionStatus] = useState<
     "idle" | "success" | "error"
   >("idle");
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const { addConnection, updateConnection, setSelectedConnectionId } =
     useDbConnectionStore();
 
+  // Initialize with completely empty values
+
   const form = useForm<ConnectionDetails>({
-    defaultValues: {
-      id: "",
-      name: "",
-      host: "localhost",
-      port: "5432",
-      database: "",
-      user: "postgres",
-      password: "",
-    },
+    defaultValues: emptyValues,
   });
 
   // Reset form when connectionToEdit changes or dialog opens
@@ -59,18 +65,16 @@ function AddDbConnectionModal({
         // If editing an existing connection
         form.reset(connectionToEdit);
       } else {
-        // If creating a new connection
-        form.reset({
-          id: "",
-          name: "",
-          host: "localhost",
-          port: "5432",
-          database: "",
-          user: "postgres",
-          password: "",
-        });
+        // If creating a new connection, use completely empty values
+        console.log("Resetting form with empty values");
+        form.reset(emptyValues);
       }
     }
+
+    // Cleanup function to reset form when unmounting
+    return () => {
+      form.reset(emptyValues);
+    };
   }, [showAddDbConnectionDialog, connectionToEdit, form]);
 
   const handleTestConnection = async () => {
@@ -78,6 +82,7 @@ function AddDbConnectionModal({
     try {
       setIsLoading(true);
       setConnectionStatus("idle");
+      setErrorMessage("");
       console.log("Testing connection with config:", formData);
 
       const connected = await window.electronAPI.testConnection(formData);
@@ -89,11 +94,15 @@ function AddDbConnectionModal({
       } else {
         console.log("Connection failed");
         setConnectionStatus("error");
+        setErrorMessage("Unable to connect to database");
         return false;
       }
     } catch (error) {
       console.error("Test connection error:", error);
       setConnectionStatus("error");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Connection failed",
+      );
       return false;
     } finally {
       setIsLoading(false);
@@ -134,24 +143,34 @@ function AddDbConnectionModal({
       setShowAddDbConnectionDialog(false);
 
       // Reset form
-      form.reset({
-        id: "",
-        name: "",
-        host: "localhost",
-        port: "5432",
-        database: "",
-        user: "postgres",
-        password: "",
-      });
+      form.reset(emptyValues);
     } catch (error) {
       console.error("Failed to save connection:", error);
     }
   };
 
+  // Handle dialog close event
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      // Reset form when closing the dialog
+      form.reset(emptyValues);
+      setConnectionStatus("idle");
+      setErrorMessage("");
+
+      // Even though this is managed by the parent component,
+      // ensure we completely clear the dialog state
+      if (!open && !connectionToEdit) {
+        // When closing the dialog, make sure there's no stale data
+        form.reset(emptyValues);
+      }
+    }
+    setShowAddDbConnectionDialog(open);
+  };
+
   return (
     <Dialog
       open={showAddDbConnectionDialog}
-      onOpenChange={setShowAddDbConnectionDialog}
+      onOpenChange={handleDialogOpenChange}
     >
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
@@ -171,7 +190,11 @@ function AddDbConnectionModal({
                 <FormItem>
                   <FormLabel>Connection Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="My Database" {...field} />
+                    <Input
+                      placeholder="postgres"
+                      className="placeholder:text-gray-400 placeholder:opacity-60"
+                      {...field}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -184,7 +207,11 @@ function AddDbConnectionModal({
                 <FormItem>
                   <FormLabel>Host</FormLabel>
                   <FormControl>
-                    <Input placeholder="localhost" {...field} />
+                    <Input
+                      placeholder="localhost"
+                      className="placeholder:text-gray-400 placeholder:opacity-60"
+                      {...field}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -197,7 +224,11 @@ function AddDbConnectionModal({
                 <FormItem>
                   <FormLabel>Port</FormLabel>
                   <FormControl>
-                    <Input placeholder="5432" {...field} />
+                    <Input
+                      placeholder="5432"
+                      className="placeholder:text-gray-400 placeholder:opacity-60"
+                      {...field}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -210,7 +241,11 @@ function AddDbConnectionModal({
                 <FormItem>
                   <FormLabel>Database</FormLabel>
                   <FormControl>
-                    <Input placeholder="postgres" {...field} />
+                    <Input
+                      placeholder="my_database"
+                      className="placeholder:text-gray-400 placeholder:opacity-60"
+                      {...field}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -223,7 +258,11 @@ function AddDbConnectionModal({
                 <FormItem>
                   <FormLabel>Username</FormLabel>
                   <FormControl>
-                    <Input placeholder="postgres" {...field} />
+                    <Input
+                      placeholder="postgres"
+                      className="placeholder:text-gray-400 placeholder:opacity-60"
+                      {...field}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -236,7 +275,12 @@ function AddDbConnectionModal({
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <Input
+                      type="password"
+                      placeholder="••••••••"
+                      className="placeholder:text-gray-400 placeholder:opacity-60"
+                      {...field}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -272,7 +316,9 @@ function AddDbConnectionModal({
             {connectionStatus === "error" && (
               <div className="flex items-center text-red-600">
                 <XCircle className="mr-1 h-4 w-4" />
-                <span className="text-xs">Connection failed</span>
+                <span className="text-xs">
+                  {errorMessage || "Connection failed"}
+                </span>
               </div>
             )}
           </div>
@@ -296,6 +342,13 @@ export function useAddDbConnectionModal() {
   const [connectionToEdit, setConnectionToEdit] = useState<
     ConnectionDetails | undefined
   >();
+
+  // Reset connectionToEdit when dialog closes
+  useEffect(() => {
+    if (!showAddDbConnectionDialog) {
+      setConnectionToEdit(undefined);
+    }
+  }, [showAddDbConnectionDialog]);
 
   const AddDbConnectionModalCallback = useCallback(() => {
     return (

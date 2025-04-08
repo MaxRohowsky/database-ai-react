@@ -71,9 +71,10 @@ function RenameChatDialog({
 
 export function useRenameChatDialog() {
   const [showRenameChatDialog, setShowRenameChatDialog] = useState(false);
-  const [chatToRename, setChatToRename] = useState<
-    { id: string; title: string } | undefined
-  >();
+  const [chatToRename, setChatToRename] = useState<{
+    id: string;
+    title: string;
+  }>();
 
   const RenameChatDialogCallback = useCallback(() => {
     if (!chatToRename) return null;
