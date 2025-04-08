@@ -12,16 +12,21 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useChatStore } from "@/store/chat-store";
-import { useDbConnectionStore } from "@/store/db-connection-store";
+import {
+  ConnectionDetails,
+  useDbConnectionStore,
+} from "@/store/db-connection-store";
 import {
   Database,
   MessageCircle,
   MoreHorizontal,
+  Pencil,
   PenSquare,
   Plus,
   Star,
   Trash2,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useAddDbConnectionModal } from "./add-db-connection-dialog";
 import { useRenameChatDialog } from "./rename-chat-dialog";
 import { SidebarGroupLabelWithIcon } from "./sidebar-icon";
@@ -96,19 +101,81 @@ function ChatItemDropdown({ chat }: { chat: Chat }) {
 
 function NewChatButton() {
   const { createNewChat } = useChatStore();
-
   const { connections, setSelectedConnectionId } = useDbConnectionStore();
+  const [connectionStatuses, setConnectionStatuses] = useState<
+    Record<string, boolean>
+  >({});
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const { setShowAddDbConnectionDialog, AddDbConnectionModal } =
-    useAddDbConnectionModal();
+  const {
+    setShowAddDbConnectionDialog,
+    setConnectionToEdit,
+    AddDbConnectionModal,
+  } = useAddDbConnectionModal();
+
+  const { removeConnection } = useDbConnectionStore();
+
+  // Check connection status when dropdown is opened and every 5 seconds while open
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+
+    const checkConnections = async () => {
+      const statuses: Record<string, boolean> = {};
+
+      for (const conn of connections) {
+        try {
+          const isConnected = await window.electronAPI.testConnection(conn);
+          statuses[conn.id] = isConnected;
+        } catch (error) {
+          console.error(`Error checking connection ${conn.name}:`, error);
+          statuses[conn.id] = false;
+        }
+      }
+
+      setConnectionStatuses(statuses);
+    };
+
+    // Only check connections when dropdown is open
+    if (isDropdownOpen) {
+      // Initial check when dropdown opens
+      checkConnections();
+
+      // Set up interval to check every 5 seconds
+      intervalId = setInterval(checkConnections, 5000);
+    }
+
+    // Clean up interval when dropdown closes or component unmounts
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isDropdownOpen, connections]);
 
   const handleCreateChatWithConnection = (connectionId: string) => {
     setSelectedConnectionId(connectionId);
     createNewChat();
   };
 
+  const handleEditConnection = (connection: ConnectionDetails) => {
+    console.log("Editing connection:", connection);
+    // Set the connection to edit and open the modal
+    setConnectionToEdit(connection);
+    setShowAddDbConnectionDialog(true);
+  };
+
+  // Delete connection
+  const handleDeleteConnection = (
+    e: React.MouseEvent,
+    connectionId: string,
+  ) => {
+    e.stopPropagation();
+    console.log("Removing connection:", connectionId);
+    removeConnection(connectionId);
+  };
+
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={setIsDropdownOpen}>
       <DropdownMenuTrigger className="w-full" asChild>
         <Button
           variant="ghost"
@@ -134,8 +201,34 @@ function NewChatButton() {
             className="m-1"
             onClick={() => handleCreateChatWithConnection(conn.id)}
           >
-            <Database className="m-1 h-4 w-4" />
-            <span>{conn.name}</span>
+            <Database
+              className={`m-1 h-4 w-4 ${
+                connectionStatuses[conn.id] !== undefined
+                  ? connectionStatuses[conn.id]
+                    ? "text-green-500"
+                    : "text-red-500"
+                  : ""
+              }`}
+            />
+            {conn.name} <br /> ({conn.database}@{conn.host})
+            <div className="flex items-center space-x-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => handleEditConnection(conn)}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-destructive h-6 w-6"
+                onClick={(e) => handleDeleteConnection(e, conn.id as string)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </DropdownMenuItem>
         ))}
 

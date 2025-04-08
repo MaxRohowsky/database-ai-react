@@ -64,11 +64,7 @@ export default function DBConnectionDialog() {
   };
 
   // Edit existing connection
-  const handleEditConnection = (
-    e: React.MouseEvent,
-    connection: ConnectionDetails,
-  ) => {
-    e.stopPropagation();
+  const handleEditConnection = (connection: ConnectionDetails) => {
     console.log("Editing connection:", connection);
     // Set the connection to edit and open the modal
     setConnectionToEdit(connection);
@@ -147,7 +143,7 @@ export default function DBConnectionDialog() {
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6"
-                    onClick={(e) => handleEditConnection(e, conn)}
+                    onClick={() => handleEditConnection(conn)}
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
