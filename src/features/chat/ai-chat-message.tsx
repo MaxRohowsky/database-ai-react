@@ -98,7 +98,7 @@ export function DbChatMessage({
   const isEditing = editingSqlId === message.id;
 
   return (
-    <Card className="overflow-hidden border border-slate-200 shadow-sm dark:border-slate-800">
+    <Card className="overflow-hidden rounded-sm border border-slate-200 shadow-none dark:border-slate-800">
       <CardHeader className="flex flex-row items-center justify-between bg-slate-50/80 pb-2 dark:bg-slate-900/30">
         <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">
           Generated SQL
@@ -110,7 +110,7 @@ export function DbChatMessage({
             onClick={() =>
               startEditingSql(message.id, message.content as string)
             }
-            className="h-6 w-6 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800"
+            className="h-6 w-6 hover:bg-slate-200 dark:hover:bg-slate-800"
           >
             <Edit className="h-3.5 w-3.5 text-slate-500" />
           </Button>
@@ -126,7 +126,7 @@ export function DbChatMessage({
           />
         ) : (
           <pre
-            className="cursor-pointer overflow-auto rounded-none bg-slate-50 p-4 font-mono text-sm text-slate-700 dark:bg-slate-900/50 dark:text-slate-300"
+            className="cursor-pointer overflow-auto bg-slate-50 p-4 font-mono text-sm text-slate-700 dark:bg-slate-900/50 dark:text-slate-300"
             onClick={() =>
               startEditingSql(message.id, message.content as string)
             }
@@ -143,7 +143,7 @@ export function DbChatMessage({
             )
           }
           disabled={!dbConfig || isLoading}
-          className="group rounded-full px-4 transition-all"
+          className="group px-4 transition-all"
           variant={isLoading ? "secondary" : "default"}
         >
           {isLoading ? (
@@ -176,7 +176,7 @@ function SqlEditor({
 }) {
   return (
     <Textarea
-      className="sql-edit-area min-h-[100px] rounded-none border-0 bg-slate-50 p-4 font-mono text-sm focus:ring-1 focus:ring-blue-400 dark:bg-slate-900/50 dark:text-slate-300"
+      className="sql-edit-area min-h-[100px] rounded-sm border-0 bg-slate-50 p-4 font-mono text-sm focus:ring-1 focus:ring-blue-400 dark:bg-slate-900/50 dark:text-slate-300"
       value={content}
       onChange={(e) => setContent(e.target.value)}
       autoFocus

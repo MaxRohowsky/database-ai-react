@@ -5,7 +5,7 @@ export function ResultChatMessage({ message }: { message: ChatMessage }) {
   return (
     <Card
       key={message.id}
-      className="overflow-hidden border border-slate-200 shadow-sm dark:border-slate-800"
+      className="overflow-hidden rounded-md border border-slate-200 shadow-none dark:border-slate-800"
     >
       <CardHeader className="bg-slate-50/80 pb-2 dark:bg-slate-900/30">
         <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">
