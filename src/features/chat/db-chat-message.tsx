@@ -7,9 +7,9 @@ export function ResultChatMessage({ message }: { message: ChatMessage }) {
       key={message.id}
       className="overflow-hidden rounded-md border border-slate-200 shadow-none dark:border-slate-800"
     >
-      <CardHeader className="bg-slate-50/80 pb-2 dark:bg-slate-900/30">
+      <CardHeader className="dark:bg-slate-900/30">
         <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          Results after running query
+          Results
         </h3>
       </CardHeader>
       <CardContent className="p-0">

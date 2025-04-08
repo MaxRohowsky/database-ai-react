@@ -99,7 +99,7 @@ export function DbChatMessage({
 
   return (
     <Card className="overflow-hidden rounded-sm border border-slate-200 shadow-none dark:border-slate-800">
-      <CardHeader className="flex flex-row items-center justify-between bg-slate-50/80 pb-2 dark:bg-slate-900/30">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 dark:bg-slate-900/30">
         <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">
           Generated SQL
         </h3>
@@ -126,7 +126,7 @@ export function DbChatMessage({
           />
         ) : (
           <pre
-            className="cursor-pointer overflow-auto bg-slate-50 p-4 font-mono text-sm text-slate-700 dark:bg-slate-900/50 dark:text-slate-300"
+            className="mx-4 cursor-pointer overflow-auto rounded-sm bg-slate-50 p-4 font-mono text-sm text-slate-700 dark:bg-slate-900/50 dark:text-slate-300"
             onClick={() =>
               startEditingSql(message.id, message.content as string)
             }
@@ -135,7 +135,7 @@ export function DbChatMessage({
           </pre>
         )}
       </CardContent>
-      <CardFooter className="bg-slate-50/80 py-3 dark:bg-slate-900/30">
+      <CardFooter className="dark:bg-slate-900/30">
         <Button
           onClick={() =>
             executeQuery(
