@@ -11,6 +11,7 @@ export interface ConnectionDetails {
 export interface SqlResult {
   columns: string[];
   rows: Record<string, unknown>[];
+  affectedRows?: number;
   error?: string;
 }
 
@@ -82,12 +83,31 @@ export async function executeQuery(config: ConnectionDetails, query: string): Pr
 
     const result = await connection.unsafe(query);
 
+    // Check if this is a modification query
+    const isModification = /^\s*(INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRUNCATE)/i.test(query.trim());
+    let affectedRows;
+
+    // For modification queries, rowCount may represent affected rows
+    if (isModification && Array.isArray(result) && result.length === 0) {
+      // Try to get the count of affected rows from the result
+      // Postgres.js sometimes provides this in a command tag like "DELETE 1"
+      if (result.count !== undefined) {
+        affectedRows = result.count;
+      } else if (result.command && /\d+/.test(result.command)) {
+        const match = result.command.match(/\d+/);
+        if (match) {
+          affectedRows = parseInt(match[0], 10);
+        }
+      }
+    }
+
     // Get column names from the first result
     const columns = result.length > 0 ? Object.keys(result[0]) : [];
 
     return {
       rows: result,
       columns,
+      affectedRows,
     };
   } catch (error) {
     console.error('Query execution error:', error);

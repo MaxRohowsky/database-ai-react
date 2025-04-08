@@ -59,6 +59,7 @@ export async function executeSqlQuery(
 ): Promise<{
   rows?: Record<string, unknown>[];
   columns?: string[];
+  affectedRows?: number;
   error?: string;
 }> {
   try {
@@ -99,6 +100,7 @@ export async function executeSqlQuery(
     return {
       rows: result.rows || [],
       columns: result.columns || [],
+      affectedRows: result.affectedRows,
     };
   } catch (error) {
     console.error("SQL execution error:", error);

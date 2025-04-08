@@ -7,6 +7,8 @@ export interface ChatMessage {
   content: string | Record<string, unknown>[];
   columns?: string[];
   error?: string;
+  affectedRows?: number;
+  originalQuery?: string;
 }
 
 export interface Chat {

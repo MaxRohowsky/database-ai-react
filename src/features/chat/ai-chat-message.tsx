@@ -61,12 +61,24 @@ export function DbChatMessage({
         throw new Error(result.error);
       }
 
-      // Add result message to store
+      // Check if it's a modification query by looking for keywords
+      const isModification =
+        /^\s*(INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRUNCATE)/i.test(
+          sqlQuery.trim(),
+        );
 
+      // Add result message to store
       addMessageToCurrentChat({
         type: "result",
         content: result.rows || [],
         columns: result.columns || [],
+        // If it's a modification query with zero rows returned, likely affected rows
+        affectedRows:
+          isModification && result.rows?.length === 0
+            ? result.affectedRows
+            : undefined,
+        // Store the original query for reference
+        originalQuery: sqlQuery,
       });
     } catch (err) {
       console.error("SQL execution error:", err);
@@ -126,6 +138,7 @@ export function DbChatMessage({
           />
         ) : (
           <pre
+            id={`sql-message-${message.id}`}
             className="mx-4 cursor-pointer overflow-auto rounded-sm bg-slate-50 p-4 font-mono text-sm text-slate-700 dark:bg-slate-900/50 dark:text-slate-300"
             onClick={() =>
               startEditingSql(message.id, message.content as string)
