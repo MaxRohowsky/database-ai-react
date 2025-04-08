@@ -257,7 +257,7 @@ function NewChatButton() {
 }
 
 function FavouriteChats() {
-  const { chats, setCurrentChatId } = useChatStore();
+  const { chats, setCurrentChatId, currentChatId } = useChatStore();
   const favouriteChats = chats.filter((chat) => chat.isFavourite);
 
   return (
@@ -274,7 +274,9 @@ function FavouriteChats() {
           <SidebarMenuItem className="py-[0.5px]" key={chat.id}>
             <SidebarMenuButton
               onClick={() => setCurrentChatId(chat.id)}
-              className="rounded-md transition-colors hover:bg-gray-50"
+              className={`rounded-none transition-colors ${
+                currentChatId === chat.id ? "bg-amber-100" : "hover:bg-gray-100"
+              }`}
             >
               <div className="flex items-center">
                 <div className="mr-2 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
@@ -296,7 +298,7 @@ function FavouriteChats() {
 }
 
 function RecentChats() {
-  const { chats, setCurrentChatId } = useChatStore();
+  const { chats, setCurrentChatId, currentChatId } = useChatStore();
   const recentChats = chats.filter((chat) => !chat.isFavourite);
 
   return (
@@ -308,15 +310,28 @@ function RecentChats() {
           variant="blue"
         />
       </SidebarGroupLabel>
-      <SidebarGroupContent>
+      <SidebarGroupContent className="my-2">
         {recentChats.length > 0 ? (
           recentChats.map((chat) => (
             <SidebarMenuItem
-              className="ml-5 border-l px-2 py-[0.5px]"
+              className={`ml-8 border-l border-blue-100 p-1 py-[0.5px] ${
+                currentChatId === chat.id
+                  ? "bg-blue-100"
+                  : "hover:bg-blue-100 active:bg-blue-100"
+              }`}
               key={chat.id}
             >
-              <SidebarMenuButton onClick={() => setCurrentChatId(chat.id)}>
-                <span className="text-base text-gray-700">{chat.title}</span>
+              <SidebarMenuButton
+                className={`m-0 rounded-none p-0 ${
+                  currentChatId === chat.id
+                    ? "bg-blue-100 hover:bg-blue-100"
+                    : "hover:bg-blue-100 active:bg-blue-100"
+                }`}
+                onClick={() => setCurrentChatId(chat.id)}
+              >
+                <span className="px-2 text-base text-gray-700">
+                  {chat.title}
+                </span>
               </SidebarMenuButton>
               <ChatItemDropdown chat={chat} />
             </SidebarMenuItem>
