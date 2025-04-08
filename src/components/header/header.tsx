@@ -7,10 +7,10 @@ import {
 import { useChatStore } from "@/store/chat-store";
 import { MoreHorizontal, PenSquare, Star, Trash2 } from "lucide-react";
 
+import AiConfigDialog from "@/components/header/select-ai-model";
+import SelectedDBConnection from "@/components/header/selected-db-connection";
 import { useRenameChatDialog } from "@/components/rename-chat-dialog";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import AiConfigDialog from "./select-ai-model";
-import DBConnectionDialog from "./select-db-connection";
 
 export default function Header() {
   const { getCurrentChat } = useChatStore();
@@ -66,7 +66,7 @@ export default function Header() {
           </div>
         </div>
 
-        <DBConnectionDialog />
+        <SelectedDBConnection />
         <AiConfigDialog />
         <RenameChatDialog />
       </div>
