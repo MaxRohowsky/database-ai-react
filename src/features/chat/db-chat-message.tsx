@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { executeSqlQuery } from "@/services/sqlService";
+import { executeSqlQuery } from "@/services/sql-service";
 import { ChatMessage } from "@/store/chat-store";
 import { useDbConnectionStore } from "@/store/db-connection-store";
 import { Check, Search } from "lucide-react";

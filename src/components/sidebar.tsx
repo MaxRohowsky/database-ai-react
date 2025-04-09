@@ -1,4 +1,15 @@
+import { useAddDbConnectionModal } from "@/components/dialog/add-db-connection-dialog";
+import { useRenameChatDialog } from "@/components/dialog/rename-chat-dialog";
+import { SidebarGroupLabelWithIcon } from "@/components/sidebar-icon";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
   SidebarContent,
@@ -27,17 +38,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAddDbConnectionModal } from "./add-db-connection-dialog";
-import { useRenameChatDialog } from "./rename-chat-dialog";
-import { SidebarGroupLabelWithIcon } from "./sidebar-icon";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { Separator } from "./ui/separator";
 
 export const AppSidebar = () => {
   const { RenameChatDialog } = useRenameChatDialog();

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchDatabaseSchema, generateSql } from "@/services/sqlService";
+import { fetchDatabaseSchema, generateSql } from "@/services/sql-service";
 import { useAiConfigStore } from "@/store/ai-config-store";
 import { ChevronUp, Loader2, Send } from "lucide-react";
 import { useEffect, useState } from "react";

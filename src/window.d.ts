@@ -21,6 +21,7 @@ interface AiResponse {
 interface SqlResult {
   columns: string[];
   rows: Record<string, unknown>[];
+  affectedRows?: number;
   error?: string;
 }
 

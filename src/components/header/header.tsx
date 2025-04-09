@@ -7,9 +7,9 @@ import {
 import { useChatStore } from "@/store/chat-store";
 import { MoreHorizontal, PenSquare, Star, Trash2 } from "lucide-react";
 
+import { useRenameChatDialog } from "@/components/dialog/rename-chat-dialog";
 import AiConfigDialog from "@/components/header/select-ai-model";
 import SelectedDBConnection from "@/components/header/selected-db-connection";
-import { useRenameChatDialog } from "@/components/rename-chat-dialog";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function Header() {

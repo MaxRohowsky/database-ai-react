@@ -1,7 +1,13 @@
 import { AiModelConfig } from "@/store/ai-config-store";
 import { ConnectionDetails } from "@/store/db-connection-store";
 
-// Function to generate SQL using AI
+/**
+ * Generates SQL using AI
+ * @param query - The user's query
+ * @param aiConfig - The AI configuration
+ * @param dbSchema - The database schema
+ * @returns The generated SQL
+ */
 export async function generateSql(
   query: string,
   aiConfig: AiModelConfig,
@@ -14,16 +20,6 @@ export async function generateSql(
     if (!aiConfig) {
       throw new Error("AI configuration not found");
     }
-
-    console.log(
-      "Generating SQL with config:",
-      JSON.stringify({
-        provider: aiConfig.provider,
-        model: aiConfig.model,
-        apiKeyLength: aiConfig.apiKey ? aiConfig.apiKey.length : 0,
-        hasSchema: !!dbSchema,
-      }),
-    );
 
     const response = await window.electronAPI.generateSQL(
       aiConfig,
@@ -52,7 +48,12 @@ export async function generateSql(
   }
 }
 
-// Function to execute SQL query against the database
+/**
+ * Executes a SQL query against the database
+ * @param sql - The SQL query to execute
+ * @param dbConfig - The database configuration
+ * @returns The result of the SQL query
+ */
 export async function executeSqlQuery(
   sql: string,
   dbConfig: ConnectionDetails,
@@ -66,30 +67,6 @@ export async function executeSqlQuery(
     if (!dbConfig) {
       throw new Error("Database configuration not found");
     }
-
-    // Make sure all required fields are present
-    const requiredFields = ["host", "port", "database", "user"];
-    const missingFields = requiredFields.filter(
-      (field) => !dbConfig[field as keyof typeof dbConfig],
-    );
-
-    if (missingFields.length > 0) {
-      throw new Error(
-        `Database configuration is incomplete. Missing fields: ${missingFields.join(", ")}`,
-      );
-    }
-
-    console.log("Executing SQL query:", sql);
-    console.log(
-      "Database config:",
-      JSON.stringify({
-        host: dbConfig.host,
-        port: dbConfig.port,
-        database: dbConfig.database,
-        user: dbConfig.user,
-        hasPassword: !!dbConfig.password,
-      }),
-    );
 
     const result = await window.electronAPI.executeSQL(dbConfig, sql);
 
@@ -113,7 +90,11 @@ export async function executeSqlQuery(
   }
 }
 
-// Function to fetch database schema
+/**
+ * Fetches the database schema
+ * @param dbConfig - The database configuration
+ * @returns The database schema
+ */
 export async function fetchDatabaseSchema(
   dbConfig: ConnectionDetails,
 ): Promise<{
@@ -125,7 +106,6 @@ export async function fetchDatabaseSchema(
       throw new Error("Database configuration not found");
     }
 
-    console.log("Fetching database schema for context...");
     const result = await window.electronAPI.fetchDbSchema(dbConfig);
 
     if (result.error) {

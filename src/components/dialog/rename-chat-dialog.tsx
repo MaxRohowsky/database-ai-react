@@ -1,15 +1,15 @@
 // src/components/RenameDialog.tsx
-import { useChatStore } from "@/store/chat-store";
-import { useCallback, useMemo, useState } from "react";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
-import { Input } from "./ui/input";
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useChatStore } from "@/store/chat-store";
+import { useCallback, useMemo, useState } from "react";
 
 interface RenameDialogProps {
   showRenameChatDialog: boolean;

@@ -6,7 +6,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { executeSqlQuery } from "@/services/sqlService";
+import { executeSqlQuery } from "@/services/sql-service";
 import { useChatStore } from "@/store/chat-store";
 import { useDbConnectionStore } from "@/store/db-connection-store";
 import { Edit, Loader2, Play } from "lucide-react";
