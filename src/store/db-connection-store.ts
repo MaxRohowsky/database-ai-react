@@ -7,6 +7,7 @@ export const ACTIVE_CONNECTION_ID_KEY = 'activeConnectionId';
 // Interface for connection details
 export interface ConnectionDetails {
   id: string;
+  engine: DatabaseEngine;
   name: string;
   host: string;
   port: string;
@@ -20,7 +21,7 @@ interface DbConnectionStore {
   connections: ConnectionDetails[];
   selectedConnectionId: string | null;
   isLoaded: boolean;
-  
+
   // Actions
   setConnections: (connections: ConnectionDetails[]) => void;
   setSelectedConnectionId: (id: string | null) => void;
@@ -36,13 +37,13 @@ export const useDbConnectionStore = create<DbConnectionStore>((set, get) => ({
   connections: [],
   selectedConnectionId: null,
   isLoaded: false,
-  
+
   // Actions
   setConnections: (connections) => set({ connections }),
-  
+
   setSelectedConnectionId: (id) => {
     set({ selectedConnectionId: id });
-    
+
     // Persist the selection to localStorage
     if (id) {
       localStorage.setItem(ACTIVE_CONNECTION_ID_KEY, id);
@@ -50,53 +51,53 @@ export const useDbConnectionStore = create<DbConnectionStore>((set, get) => ({
       localStorage.removeItem(ACTIVE_CONNECTION_ID_KEY);
     }
   },
-  
+
   getSelectedConnection: () => {
     const { connections, selectedConnectionId } = get();
     if (!selectedConnectionId) return null;
     return connections.find(conn => conn.id === selectedConnectionId) || null;
   },
-  
+
   addConnection: (connection) => {
-    set(state => ({ 
-      connections: [...state.connections, connection] 
+    set(state => ({
+      connections: [...state.connections, connection]
     }));
-    
+
     // Save to localStorage
     saveConnectionsToPersistentStorage(get().connections);
-    
+
     return connection;
   },
-  
+
   updateConnection: (connection) => {
     set(state => ({
-      connections: state.connections.map(conn => 
+      connections: state.connections.map(conn =>
         conn.id === connection.id ? connection : conn
       )
     }));
-    
+
     // Save to localStorage
     saveConnectionsToPersistentStorage(get().connections);
-    
+
     return connection;
   },
-  
+
   removeConnection: (connectionId) => {
     const { selectedConnectionId } = get();
-    
+
     set(state => ({
       connections: state.connections.filter(conn => conn.id !== connectionId)
     }));
-    
+
     // If we're removing the selected connection, clear the selection
     if (selectedConnectionId === connectionId) {
       get().setSelectedConnectionId(null);
     }
-    
+
     // Save to localStorage
     saveConnectionsToPersistentStorage(get().connections);
   },
-  
+
   setIsLoaded: (isLoaded) => set({ isLoaded })
 }));
 
@@ -117,27 +118,27 @@ export function initializeDbConnectionStore() {
     if (savedConnectionsJson) {
       try {
         const connections = JSON.parse(savedConnectionsJson) as ConnectionDetails[];
-        
+
         // Validate the connections
         const validConnections = connections.filter(conn => {
           // Ensure all fields are present
-          return conn.id && conn.name && conn.host && 
-                 conn.port && conn.database && conn.user;
+          return conn.id && conn.name && conn.host &&
+            conn.port && conn.database && conn.user;
         });
-        
+
         useDbConnectionStore.setState({ connections: validConnections });
       } catch (parseError) {
         console.error('Failed to parse saved connections JSON:', parseError);
       }
     }
-    
+
     // Get selected connection ID
     const activeConnectionId = localStorage.getItem(ACTIVE_CONNECTION_ID_KEY);
     if (activeConnectionId) {
       // Verify the connection exists
       const { connections } = useDbConnectionStore.getState();
       const activeConnectionExists = connections.some(conn => conn.id === activeConnectionId);
-      
+
       if (activeConnectionExists) {
         useDbConnectionStore.setState({ selectedConnectionId: activeConnectionId });
       } else {
@@ -145,7 +146,7 @@ export function initializeDbConnectionStore() {
         localStorage.removeItem(ACTIVE_CONNECTION_ID_KEY);
       }
     }
-    
+
     // Mark as loaded
     useDbConnectionStore.setState({ isLoaded: true });
   } catch (error) {

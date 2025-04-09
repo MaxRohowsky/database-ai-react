@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { useDbConnectionStore } from "./db-connection-store";
 
-export interface ChatMessage {
+/* export interface ChatMessage {
   id: string;
   type: "user" | "sql" | "result";
   content: string | Record<string, unknown>[];
@@ -12,7 +12,7 @@ export interface ChatMessage {
   showExactCount?: boolean;
   returningRows?: Record<string, unknown>[];
   returningColumns?: string[];
-}
+} */
 
 export interface Chat {
   id: string;

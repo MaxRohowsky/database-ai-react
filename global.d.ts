@@ -1,4 +1,7 @@
+
 interface ConnectionDetails {
+  engine: string;
+  id: string;
   name: string;
   host: string;
   port: string;
@@ -13,6 +16,12 @@ interface ChatMessage {
   content: string | Record<string, unknown>[];
   columns?: string[];
   error?: string;
+}
+
+interface DatabaseAdapter {
+  testConnection(): Promise<boolean>;
+  executeQuery(query: string): Promise<SqlResult>;
+  fetchDatabaseSchema(): Promise<{ schema: string | undefined, error?: string }>;
 }
 
 interface Chat {

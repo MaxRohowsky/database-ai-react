@@ -1,9 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
-import {
-  ConnectionDetails,
-  useDbConnectionStore,
-} from "@/store/db-connection-store";
+import { useDbConnectionStore } from "@/store/db-connection-store";
 import { CheckCircle, Loader2, XCircle } from "lucide-react";
+
 import {
   Dispatch,
   SetStateAction,
@@ -23,10 +21,18 @@ import {
 } from "../ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form";
 import { Input } from "../ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 const emptyValues = {
   id: "",
   name: "",
+  engine: "",
   host: "",
   port: "",
   database: "",
@@ -202,37 +208,63 @@ function AddDbConnectionModal({
 
             <FormField
               control={form.control}
-              name="host"
+              name="engine"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Host</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="localhost"
-                      className="placeholder:text-gray-400 placeholder:opacity-60"
-                      {...field}
-                    />
-                  </FormControl>
+                  <FormLabel>Database Engine</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select database engine" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="postgres">PostgreSQL</SelectItem>
+                      <SelectItem value="mysql">MySQL</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="port"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Port</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="5432"
-                      className="placeholder:text-gray-400 placeholder:opacity-60"
-                      {...field}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="host"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Host</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="localhost"
+                        className="placeholder:text-gray-400 placeholder:opacity-60"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="port"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Port</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="5432"
+                        className="placeholder:text-gray-400 placeholder:opacity-60"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}

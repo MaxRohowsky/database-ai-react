@@ -9,7 +9,7 @@ export interface AiModelConfig {
 interface AiConfigStore {
   // State
   config: AiModelConfig | null;
-  
+
   // Actions
   setConfig: (config: AiModelConfig | null) => void;
 }
@@ -19,17 +19,17 @@ const AI_CONFIG_STORAGE_KEY = 'aiModelConfig';
 export const useAiConfigStore = create<AiConfigStore>((set) => ({
   // Initial state
   config: null,
-  
+
   // Actions
   setConfig: (config) => {
     // Validate that all required fields are provided
-    if (config && (!config.provider || !config.apiKey || !config.model)) {
-      console.error("Invalid AI config provided:", config);
-      return;
-    }
-    
+    /*     if (config && (!config.provider || !config.apiKey || !config.model)) {
+          console.error("Invalid AI config provided:", config);
+          return;
+        } */
+
     set({ config });
-    
+
     // Persist to localStorage
     if (config) {
       localStorage.setItem(AI_CONFIG_STORAGE_KEY, JSON.stringify(config));
@@ -46,7 +46,7 @@ export function initializeAiConfigStore() {
     if (savedConfig) {
       try {
         const config = JSON.parse(savedConfig) as AiModelConfig;
-        
+
         // Validate the config has required fields
         if (config && config.provider && config.apiKey && config.model) {
           useAiConfigStore.setState({ config });
