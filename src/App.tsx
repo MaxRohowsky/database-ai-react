@@ -1,5 +1,5 @@
-import Header from "@/components/header/header";
-import { AppSidebar } from "@/components/sidebar";
+import Header from "@/components/common/header/header";
+import { AppSidebar } from "@/components/common/sidebar/sidebar";
 import Chat from "@/features/chat/chat";
 import { ChatInput } from "@/features/chat/chat-input";
 import { useChatStore } from "@/store/chat-store";

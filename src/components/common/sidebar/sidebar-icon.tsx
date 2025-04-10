@@ -1,4 +1,3 @@
-import { SidebarGroupLabel } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
 
@@ -54,17 +53,16 @@ const variantStyles = {
   },
 };
 
-export function SidebarGroupLabelWithIcon({
+export function SidebarIcon({
   icon: Icon,
   label,
   variant = "blue",
   customColors,
-  className,
 }: SidebarLabelProps) {
   const colors = variant === "custom" ? customColors : variantStyles[variant];
 
   return (
-    <SidebarGroupLabel className={cn("text-black", className)}>
+    <>
       <div
         className={cn(
           "mr-2 flex h-8 w-8 items-center justify-center rounded-lg shadow-sm",
@@ -75,6 +73,6 @@ export function SidebarGroupLabelWithIcon({
         <Icon className={cn("h-4 w-4", colors?.icon, colors?.iconFill)} />
       </div>
       <span className="text-base font-medium">{label}</span>
-    </SidebarGroupLabel>
+    </>
   );
 }
