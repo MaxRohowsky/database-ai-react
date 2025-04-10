@@ -7,23 +7,17 @@ import {
 } from "@/components/ui/sidebar";
 import { useChatStore } from "@/store/chat-store";
 import { MessageCircle } from "lucide-react";
-import { ChatItemDropdown } from "./chat-item-dropdown";
-import { SidebarIcon } from "./sidebar-icon";
+import ChatItemDropdown from "./chat-item-dropdown";
+import SidebarIcon from "./sidebar-icon";
 
-export function RecentChats() {
+export default function RecentChats() {
   const { chats, setCurrentChatId, currentChatId } = useChatStore();
   const recentChats = chats.filter((chat) => !chat.isFavourite);
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="text-black">
-        <SidebarGroupLabel>
-          <SidebarIcon
-            icon={MessageCircle}
-            label="Recent Chats"
-            variant="blue"
-          />
-        </SidebarGroupLabel>
+        <SidebarIcon icon={MessageCircle} label="Recent Chats" variant="blue" />
       </SidebarGroupLabel>
       <SidebarGroupContent className="my-2">
         {recentChats.length > 0 ? (

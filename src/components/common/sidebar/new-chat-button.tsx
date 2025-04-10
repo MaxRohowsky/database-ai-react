@@ -8,14 +8,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { SidebarGroupLabel } from "@/components/ui/sidebar";
 import { useChatStore } from "@/store/chat-store";
 import { useDbConnectionStore } from "@/store/db-connection-store";
 import { Database, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { SidebarIcon } from "./sidebar-icon";
+import SidebarIcon from "./sidebar-icon";
 
-export function NewChatButton() {
+export default function NewChatButton() {
   const { createNewChat } = useChatStore();
   const { connections, setSelectedConnectionId } = useDbConnectionStore();
   const [connectionStatuses, setConnectionStatuses] = useState<
@@ -97,9 +96,7 @@ export function NewChatButton() {
           variant="ghost"
           className="flex h-12 w-full items-center justify-start rounded-none hover:bg-red-100"
         >
-          <SidebarGroupLabel>
-            <SidebarIcon icon={Plus} label="New chat" variant="red" />
-          </SidebarGroupLabel>
+          <SidebarIcon icon={Plus} label="New chat" variant="red" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent

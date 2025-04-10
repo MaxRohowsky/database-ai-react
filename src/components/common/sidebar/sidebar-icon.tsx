@@ -53,7 +53,7 @@ const variantStyles = {
   },
 };
 
-export function SidebarIcon({
+export default function SidebarIcon({
   icon: Icon,
   label,
   variant = "blue",

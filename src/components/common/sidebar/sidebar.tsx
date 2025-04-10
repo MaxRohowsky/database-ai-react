@@ -5,11 +5,11 @@ import {
   SidebarHeader,
   SidebarMenu,
 } from "@/components/ui/sidebar";
-import { FavouriteChats } from "./favourite-chats";
-import { NewChatButton } from "./new-chat-button";
-import { RecentChats } from "./recent-chats";
+import FavouriteChats from "./favourite-chats";
+import NewChatButton from "./new-chat-button";
+import RecentChats from "./recent-chats";
 
-export const AppSidebar = () => {
+export default function AppSidebar() {
   const { RenameChatDialog } = useRenameChatDialog();
 
   return (
@@ -32,4 +32,4 @@ export const AppSidebar = () => {
       <RenameChatDialog />
     </>
   );
-};
+}

@@ -1,6 +1,6 @@
-export { AppSidebar } from "./sidebar";
-export { ChatItemDropdown } from "./chat-item-dropdown";
-export { FavouriteChats } from "./favourite-chats";
-export { RecentChats } from "./recent-chats";
-export { NewChatButton } from "./new-chat-button";
-export { SidebarIcon } from "./sidebar-icon";
+export { default as AppSidebar } from "./sidebar";
+export { default as ChatItemDropdown } from "./chat-item-dropdown";
+export { default as FavouriteChats } from "./favourite-chats";
+export { default as RecentChats } from "./recent-chats";
+export { default as NewChatButton } from "./new-chat-button";
+export { default as SidebarIcon } from "./sidebar-icon";

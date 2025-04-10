@@ -7,10 +7,10 @@ import {
 } from "@/components/ui/sidebar";
 import { useChatStore } from "@/store/chat-store";
 import { Star } from "lucide-react";
-import { ChatItemDropdown } from "./chat-item-dropdown";
-import { SidebarIcon } from "./sidebar-icon";
+import ChatItemDropdown from "./chat-item-dropdown";
+import SidebarIcon from "./sidebar-icon";
 
-export function FavouriteChats() {
+export default function FavouriteChats() {
   const { chats, setCurrentChatId, currentChatId } = useChatStore();
   const favouriteChats = chats.filter((chat) => chat.isFavourite);
 

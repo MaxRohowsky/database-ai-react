@@ -10,7 +10,7 @@ import {
 import { SidebarMenuAction } from "@/components/ui/sidebar";
 import { MoreHorizontal, PenSquare, Star, Trash2 } from "lucide-react";
 
-export function ChatItemDropdown({ chat }: { chat: Chat }) {
+export default function ChatItemDropdown({ chat }: { chat: Chat }) {
   const { setShowRenameChatDialog, setChatToRename, RenameChatDialog } =
     useRenameChatDialog();
 
