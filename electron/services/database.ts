@@ -1,6 +1,10 @@
 import { getDatabaseClient } from './get-database-client';
 
-
+// Extended ConnectionDetails interface to support SSL
+interface ExtendedConnectionDetails extends ConnectionDetails {
+  ssl?: boolean;
+  sslCertificate?: string;
+}
 
 export interface SqlResult {
   columns: string[];
@@ -9,12 +13,56 @@ export interface SqlResult {
   error?: string;
 }
 
+// Define an interface for errors that may have a code property
+interface ErrorWithCode extends Error {
+  code?: string | number;
+}
+
 export async function testConnection(config: ConnectionDetails): Promise<boolean> {
   try {
+    console.log('Testing connection with config:', {
+      host: config.host,
+      port: config.port,
+      database: config.database,
+      user: config.user,
+      hasPassword: !!config.password,
+      hasSSL: !!(config as ExtendedConnectionDetails).ssl,
+      hasCertificate: !!(config as ExtendedConnectionDetails).sslCertificate
+    });
+
+    // Check for Supabase connections and auto-enable SSL
+    const isSupabase =
+      config.host.includes('supabase.co') ||
+      config.host.includes('pooler.supabase.com');
+
+    if (isSupabase && !(config as ExtendedConnectionDetails).ssl) {
+      console.log('Auto-enabling SSL for Supabase connection');
+      (config as ExtendedConnectionDetails).ssl = true;
+    }
+
     const client = getDatabaseClient(config);
-    return await client.testConnection();
+    const result = await client.testConnection();
+
+    if (result) {
+      console.log('Connection successful!');
+    } else {
+      console.error('Connection failed without throwing an error');
+    }
+
+    return result;
   } catch (error) {
     console.error('Database connection test failed:', error);
+    if (error instanceof Error) {
+      // Log detailed error information for debugging
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      if ('code' in error) {
+        console.error('Error code:', (error as ErrorWithCode).code);
+      }
+      if ('stack' in error) {
+        console.error('Error stack:', error.stack);
+      }
+    }
     return false;
   }
 }

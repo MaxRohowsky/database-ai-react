@@ -4,17 +4,6 @@ import { create } from 'zustand';
 export const DB_CONNECTIONS_STORAGE_KEY = 'databaseConnections';
 export const ACTIVE_CONNECTION_ID_KEY = 'activeConnectionId';
 
-// Interface for connection details
-export interface ConnectionDetails {
-  id: string;
-  engine: DatabaseEngine;
-  name: string;
-  host: string;
-  port: string;
-  database: string;
-  user: string;
-  password: string;
-}
 
 interface DbConnectionStore {
   // State
