@@ -109,7 +109,7 @@ export default function NewChatButton() {
         {connections.map((conn) => (
           <DropdownMenuItem
             key={conn.id}
-            className="m-1"
+            className="relative m-1"
             onClick={() => handleCreateChatWithConnection(conn.id)}
           >
             <Database
@@ -121,8 +121,13 @@ export default function NewChatButton() {
                   : ""
               }`}
             />
-            {conn.name} <br /> ({conn.database}@{conn.host})
-            <div className="flex items-center space-x-1">
+            <div className="flex flex-col">
+              <span>{conn.name}</span>
+              <span className="text-muted-foreground w-36 overflow-hidden text-sm text-ellipsis whitespace-nowrap">
+                {conn.database}@{conn.host}
+              </span>
+            </div>
+            <div className="absolute right-0 flex items-center space-x-1">
               <Button
                 variant="ghost"
                 size="icon"
