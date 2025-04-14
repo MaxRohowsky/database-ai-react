@@ -12,6 +12,7 @@ export const TestConnectionButton = ({
 }) => {
   const handleTestConnection = () => {
     testConnection();
+    console.log("testConnection");
   };
 
   return (

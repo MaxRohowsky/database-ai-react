@@ -8,7 +8,7 @@ interface ConnectionDetails {
   database: string;
   user: string;
   password: string;
-  certFile?: File | null;
+  certFile?: File | string | null;
 }
 
 
