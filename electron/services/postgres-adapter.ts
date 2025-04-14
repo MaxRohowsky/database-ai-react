@@ -1,6 +1,6 @@
 import postgres from 'postgres';
 import { SqlResult } from './database';
-import { Client, Pool, ClientConfig } from 'pg';
+/* import { Client, Pool, ClientConfig } from 'pg'; */
 
 // Supabase known hostnames
 const SUPABASE_DOMAINS = ['supabase.co', 'pooler.supabase.com'];
@@ -20,7 +20,7 @@ interface ExtendedConnectionDetails extends ConnectionDetails {
 }
 
 export class PostgresAdapter implements DatabaseAdapter {
-    private connection: postgres.Sql | Client | Pool;
+    private connection: postgres.Sql;
     private host: string;
     private port: string;
     private user: string;
@@ -175,12 +175,8 @@ export class PostgresAdapter implements DatabaseAdapter {
     async testConnection(): Promise<boolean> {
         try {
             console.log('Testing PostgreSQL connection...');
+            await this.connection`SELECT 1`;
             // Use a simple query with a short timeout
-            if (this.connection instanceof Client || this.connection instanceof Pool) {
-                await this.connection.query('SELECT 1');
-            } else {
-                await this.connection`SELECT 1`;
-            }
             console.log('PostgreSQL connection test successful!');
             return true;
         } catch (error) {
@@ -205,48 +201,36 @@ export class PostgresAdapter implements DatabaseAdapter {
 
     async executeQuery(query: string): Promise<SqlResult> {
         try {
-            let result;
 
-            if (this.connection instanceof Client || this.connection instanceof Pool) {
-                result = await this.connection.query(query);
 
-                // Get column names from the result
-                const columns = result.fields ? result.fields.map(field => field.name) : [];
+            // Using postgres library
+            const result = await this.connection.unsafe(query);
 
-                return {
-                    rows: result.rows || [],
-                    columns,
-                    affectedRows: result.rowCount !== null ? result.rowCount : undefined,
-                };
-            } else {
-                // Using postgres library
-                result = await this.connection.unsafe(query);
+            // Check if this is a modification query
+            const isModification = /^\s*(INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRUNCATE)/i.test(query.trim());
+            let affectedRows;
 
-                // Check if this is a modification query
-                const isModification = /^\s*(INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRUNCATE)/i.test(query.trim());
-                let affectedRows;
-
-                // For modification queries, try to determine affected rows
-                if (isModification && Array.isArray(result) && result.length === 0) {
-                    if ('count' in result && typeof result.count === 'number') {
-                        affectedRows = result.count;
-                    } else if ('command' in result && typeof result.command === 'string' && /\d+/.test(result.command)) {
-                        const match = result.command.match(/\d+/);
-                        if (match) {
-                            affectedRows = parseInt(match[0], 10);
-                        }
+            // For modification queries, try to determine affected rows
+            if (isModification && Array.isArray(result) && result.length === 0) {
+                if ('count' in result && typeof result.count === 'number') {
+                    affectedRows = result.count;
+                } else if ('command' in result && typeof result.command === 'string' && /\d+/.test(result.command)) {
+                    const match = result.command.match(/\d+/);
+                    if (match) {
+                        affectedRows = parseInt(match[0], 10);
                     }
                 }
-
-                // Get column names from the first result
-                const columns = result.length > 0 ? Object.keys(result[0]) : [];
-
-                return {
-                    rows: result,
-                    columns,
-                    affectedRows,
-                };
             }
+
+            // Get column names from the first result
+            const columns = result.length > 0 ? Object.keys(result[0]) : [];
+
+            return {
+                rows: result,
+                columns,
+                affectedRows,
+            };
+
         } catch (error) {
             console.error('PostgreSQL query execution error:', error);
             return {

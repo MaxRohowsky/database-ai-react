@@ -1,7 +1,7 @@
 import { useDbConnectionStore } from "@/store/db-connection-store";
 import { Database, Edit2, Plus, ServerCog, Trash2 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { useAddDbConnectionModal } from "./add-db-connection-dialog";
+import { useAddDbConnectionModal } from "./add-db-connection-dialog/add-db-connection-dialog";
 import { useSupabaseConnectionDialog } from "./supabase-connection-dialog";
 
 import {

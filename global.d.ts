@@ -10,6 +10,11 @@ interface ConnectionDetails {
   password: string;
 }
 
+interface SupabaseConnectionDetails extends ConnectionDetails {
+  certFile: File | null;
+}
+
+
 interface ChatMessage {
   id: string;
   type: 'user' | 'ai' | 'db';

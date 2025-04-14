@@ -1,4 +1,4 @@
-import { useAddDbConnectionModal } from "@/components/dialog/add-db-connection-dialog";
+import { useAddDbConnectionModal } from "@/components/dialog/add-db-connection-dialog/add-db-connection-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,8 +12,8 @@ import { useChatStore } from "@/store/chat-store";
 import { useDbConnectionStore } from "@/store/db-connection-store";
 import { Database, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import Marquee from "react-fast-marquee";
 import SidebarIcon from "./sidebar-icon";
-
 export default function NewChatButton() {
   const { createNewChat } = useChatStore();
   const { connections, setSelectedConnectionId } = useDbConnectionStore();
@@ -21,6 +21,9 @@ export default function NewChatButton() {
     Record<string, boolean>
   >({});
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [hoveredConnection, setHoveredConnection] = useState<string | null>(
+    null,
+  );
 
   const {
     setShowAddDbConnectionDialog,
@@ -111,6 +114,8 @@ export default function NewChatButton() {
             key={conn.id}
             className="relative m-1"
             onClick={() => handleCreateChatWithConnection(conn.id)}
+            onMouseEnter={() => setHoveredConnection(conn.id)}
+            onMouseLeave={() => setHoveredConnection(null)}
           >
             <Database
               className={`m-1 h-4 w-4 ${
@@ -123,8 +128,10 @@ export default function NewChatButton() {
             />
             <div className="flex flex-col">
               <span>{conn.name}</span>
-              <span className="text-muted-foreground w-36 overflow-hidden text-sm text-ellipsis whitespace-nowrap">
-                {conn.database}@{conn.host}
+              <span className="text-muted-foreground w-36 overflow-hidden text-sm">
+                <Marquee play={hoveredConnection === conn.id}>
+                  {conn.database}@{conn.host}
+                </Marquee>
               </span>
             </div>
             <div className="absolute right-0 flex items-center space-x-1">
