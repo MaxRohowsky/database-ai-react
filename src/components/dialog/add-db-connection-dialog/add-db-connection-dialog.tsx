@@ -32,8 +32,7 @@ import {
 import { useForm, UseFormReturn } from "react-hook-form";
 import { SaveConnectionButton } from "./components/save-connection-button";
 import { TestConnectionButton } from "./components/test-connection-button";
-import PostgresForm from "./db-engine-forms/postgres-form";
-import SupabaseForm from "./db-engine-forms/supabase-form";
+import ConfigForm from "./db-config-form/config-form";
 import { useInitForm } from "./hooks/use-init-form";
 import { useTestConnection } from "./hooks/use-test-connection";
 
@@ -46,6 +45,7 @@ export const emptyValues = {
   database: "",
   user: "",
   password: "",
+  certFile: null,
 };
 
 function AddDbConnectionModal({
@@ -61,7 +61,6 @@ function AddDbConnectionModal({
     defaultValues: emptyValues,
   });
 
-  const isEngineFieldEmpty = form.watch("engine") === "";
   // Test Connection State needs to be available to Save and Test buttons
   const { isLoading, connectionStatus, isConnected, testConnection } =
     useTestConnection(form);
@@ -90,34 +89,24 @@ function AddDbConnectionModal({
           <form className="grid gap-4 py-4">
             <ConnectionNameField form={form} />
             <DatabaseEngineField form={form} />
-
-            {/* Database-specific form fields */}
-            {form.watch("engine") === "postgres" && (
-              <PostgresForm form={form} />
-            )}
-
-            {form.watch("engine") === "supabase" && (
-              <SupabaseForm form={form} />
-            )}
-
+            <ConfigForm form={form} />
+            {/*Hidden Id Field */}
             <input type="hidden" {...form.register("id")} />
           </form>
         </Form>
 
-        {!isEngineFieldEmpty && (
-          <DialogFooter className="flex items-center justify-between">
-            <TestConnectionButton
-              isLoading={isLoading}
-              connectionStatus={connectionStatus}
-              testConnection={testConnection}
-            />
-            <SaveConnectionButton
-              form={form}
-              setShowAddDbConnectionDialog={setShowAddDbConnectionDialog}
-              isConnected={isConnected}
-            />
-          </DialogFooter>
-        )}
+        <DialogFooter className="flex items-center justify-between">
+          <TestConnectionButton
+            isLoading={isLoading}
+            connectionStatus={connectionStatus}
+            testConnection={testConnection}
+          />
+          <SaveConnectionButton
+            form={form}
+            setShowAddDbConnectionDialog={setShowAddDbConnectionDialog}
+            isConnected={isConnected}
+          />
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -172,7 +161,9 @@ function ConnectionNameField({
       name="name"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Connection Name</FormLabel>
+          <FormLabel className="after:ml-0.5 after:text-xs after:text-black/70 after:content-['*']">
+            Connection Name
+          </FormLabel>
           <FormControl>
             <Input
               placeholder="postgres"
@@ -197,7 +188,9 @@ function DatabaseEngineField({
       name="engine"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Database Engine</FormLabel>
+          <FormLabel className="after:ml-0.5 after:text-xs after:text-black/70 after:content-['*']">
+            Database Engine
+          </FormLabel>
           <Select onValueChange={field.onChange} defaultValue={field.value}>
             <FormControl>
               <SelectTrigger className="w-full">

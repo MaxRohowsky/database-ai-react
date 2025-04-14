@@ -8,11 +8,9 @@ interface ConnectionDetails {
   database: string;
   user: string;
   password: string;
+  certFile?: File | null;
 }
 
-interface SupabaseConnectionDetails extends ConnectionDetails {
-  certFile: File | null;
-}
 
 
 interface ChatMessage {
