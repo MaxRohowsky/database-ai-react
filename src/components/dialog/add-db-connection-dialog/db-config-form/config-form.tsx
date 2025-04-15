@@ -131,7 +131,10 @@ export default function ConfigForm({
             </FormControl>
             {field.value && (
               <p className="text-muted-foreground text-xs">
-                Certificate: {field.value.name}
+                Certificate:{" "}
+                {typeof field.value === "string"
+                  ? "Certificate loaded (previously uploaded)"
+                  : `Certificate: ${field.value.name}`}
               </p>
             )}
           </FormItem>
