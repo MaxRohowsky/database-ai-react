@@ -75,14 +75,14 @@ export class PostgresAdapter implements DatabaseAdapter {
 
     async fetchDatabaseSchema(): Promise<{ schema: string | undefined, error?: string }> {
         try {
-            const result = await this.connection.unsafe(schemaQuery);
+            const schemaRows = await this.connection.unsafe(schemaQuery);
 
-            const tables = buildSchemaMap(result);
+            const tableStructure = buildSchemaMap(schemaRows);
 
-            const schemaString = formatSchemaString(tables);
+            const formattedSchemaText = formatSchemaString(tableStructure);
 
             return {
-                schema: schemaString
+                schema: formattedSchemaText
             };
         } catch (error) {
             console.error('PostgreSQL schema fetch error:', error);
