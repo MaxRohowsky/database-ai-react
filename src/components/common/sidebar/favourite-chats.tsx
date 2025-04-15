@@ -23,7 +23,7 @@ export default function FavouriteChats() {
         {favouriteChats.length > 0 ? (
           favouriteChats.map((chat) => (
             <SidebarMenuItem
-              className={`ml-8 border-l border-amber-200 p-1 py-[0.5px] ${
+              className={`ml-6 border-l border-amber-200 p-1 py-[0.5px] ${
                 currentChatId === chat.id
                   ? "bg-amber-100"
                   : "hover:bg-amber-100 active:bg-amber-100"

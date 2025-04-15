@@ -24,6 +24,8 @@ export const SaveConnectionButton = ({
   const { saveConnection } = useSaveConnection(form);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
 
+  console.log("Saving Connection", form.getValues());
+
   const handleSaveConnection = () => {
     if (isConnected) {
       saveConnection();

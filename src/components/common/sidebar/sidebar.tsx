@@ -17,11 +17,11 @@ export default function AppSidebar() {
       <Sidebar>
         <SidebarHeader>
           <div className="my-3 ml-1 flex items-center">
-            <h1 className="text-xl font-medium text-neutral-800">OtterDB</h1>
+            <h1 className="text-xl font-medium text-neutral-800">DBChat</h1>
           </div>
         </SidebarHeader>
         <NewChatButton />
-        <SidebarContent className="">
+        <SidebarContent>
           <SidebarMenu>
             <FavouriteChats />
             <RecentChats />

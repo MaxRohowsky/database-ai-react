@@ -23,7 +23,7 @@ export default function RecentChats() {
         {recentChats.length > 0 ? (
           recentChats.map((chat) => (
             <SidebarMenuItem
-              className={`ml-8 border-l border-blue-100 p-1 py-[0.5px] ${
+              className={`ml-6 border-l border-blue-100 p-1 py-[0.5px] ${
                 currentChatId === chat.id
                   ? "bg-blue-100"
                   : "hover:bg-blue-100 active:bg-blue-100"

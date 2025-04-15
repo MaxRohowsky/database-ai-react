@@ -1,3 +1,4 @@
+import { readFileAsText } from "@/lib/utils";
 import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 
@@ -18,26 +19,20 @@ export const useTestConnection = (form: UseFormReturn<ConnectionDetails>) => {
   const [isConnected, setIsConnected] = useState(false);
 
   const testConnection = async (): Promise<boolean> => {
-    const formData = form.getValues();
     try {
       setIsLoading(true);
       setConnectionStatus("idle");
 
+      const formData = form.getValues();
+
       // Create a copy of the form data
-      const formDataToSend = { ...formData };
-
-      // If there's a certificate file, read it and convert to string
-      if (formData.certFile instanceof File) {
-        const fileReader = new FileReader();
-        const certContent = await new Promise<string>((resolve, reject) => {
-          fileReader.onload = () => resolve(fileReader.result as string);
-          fileReader.onerror = () => reject(fileReader.error);
-          fileReader.readAsText(formData.certFile as File);
-        });
-
-        // Replace the File object with the file content string
-        formDataToSend.certFile = certContent;
-      }
+      const formDataToSend = {
+        ...formData,
+        certFile:
+          formData.certFile instanceof File
+            ? await readFileAsText(formData.certFile)
+            : formData.certFile,
+      };
 
       const connected = await window.electronAPI.testConnection(formDataToSend);
 
