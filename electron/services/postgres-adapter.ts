@@ -1,6 +1,6 @@
 import postgres from 'postgres';
 import { SqlResult } from '../types';
-import { isUpdateQuery, buildSchemaMap } from './utils';
+import { isUpdateQuery, buildSchemaMap, formatSchemaString } from './utils';
 
 
 const schemaQuery = `
@@ -79,21 +79,7 @@ export class PostgresAdapter implements DatabaseAdapter {
 
             const tables = buildSchemaMap(result);
 
-
-            // Format as string for the AI model
-            let schemaString = "Database Schema:\n\n";
-
-            for (const tableKey in tables) {
-                const table = tables[tableKey];
-                schemaString += `Table: ${table.schema}.${table.name}\n`;
-                schemaString += `Columns:\n`;
-
-                for (const column of table.columns) {
-                    schemaString += `  - ${column.name} (${column.type}${column.nullable ? ', nullable' : ''})\n`;
-                }
-
-                schemaString += `\n`;
-            }
+            const schemaString = formatSchemaString(tables);
 
             return {
                 schema: schemaString
