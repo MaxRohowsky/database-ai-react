@@ -1,6 +1,25 @@
 import postgres from 'postgres';
-import { SqlResult } from './database';
+import { SqlResult } from '../types';
+import { isUpdateQuery, buildSchemaMap } from './utils';
 
+
+const schemaQuery = `
+SELECT 
+  table_schema, 
+  table_name, 
+  column_name, 
+  data_type, 
+  is_nullable,
+  column_default
+FROM 
+  information_schema.columns
+WHERE 
+  table_schema NOT IN ('pg_catalog', 'information_schema')
+ORDER BY 
+  table_schema, 
+  table_name, 
+  ordinal_position;
+`;
 
 
 export class PostgresAdapter implements DatabaseAdapter {
@@ -23,12 +42,9 @@ export class PostgresAdapter implements DatabaseAdapter {
 
     async testConnection(): Promise<boolean> {
         try {
-            console.log('Testing PostgreSQL connection...');
             await this.connection`SELECT 1`;
-            console.log('PostgreSQL connection test successful!');
             return true;
         } catch (error) {
-            console.error('PostgreSQL connection test failed:', error);
             return false;
         }
     }
@@ -37,24 +53,10 @@ export class PostgresAdapter implements DatabaseAdapter {
         try {
             const result = await this.connection.unsafe(query);
 
-            // Check if this is a modification query
-            const isModification = /^\s*(INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRUNCATE)/i.test(query.trim());
-            let affectedRows;
+            const isUpdate = isUpdateQuery(query);
 
-            // For modification queries, rowCount may represent affected rows
-            if (isModification && Array.isArray(result) && result.length === 0) {
-                // Try to get the count of affected rows from the result
-                if (result.count !== undefined) {
-                    affectedRows = result.count;
-                } else if (result.command && /\d+/.test(result.command)) {
-                    const match = result.command.match(/\d+/);
-                    if (match) {
-                        affectedRows = parseInt(match[0], 10);
-                    }
-                }
-            }
+            const affectedRows = isUpdate ? result.length : undefined;
 
-            // Get column names from the first result
             const columns = result.length > 0 ? Object.keys(result[0]) : [];
 
             return {
@@ -63,7 +65,6 @@ export class PostgresAdapter implements DatabaseAdapter {
                 affectedRows,
             };
         } catch (error) {
-            console.error('PostgreSQL query execution error:', error);
             return {
                 rows: [],
                 columns: [],
@@ -74,61 +75,10 @@ export class PostgresAdapter implements DatabaseAdapter {
 
     async fetchDatabaseSchema(): Promise<{ schema: string | undefined, error?: string }> {
         try {
-            // Query to get tables, columns, and their types for PostgreSQL
-            const schemaQuery = `
-          SELECT 
-            table_schema, 
-            table_name, 
-            column_name, 
-            data_type, 
-            is_nullable,
-            column_default
-          FROM 
-            information_schema.columns
-          WHERE 
-            table_schema NOT IN ('pg_catalog', 'information_schema')
-          ORDER BY 
-            table_schema, 
-            table_name, 
-            ordinal_position;
-        `;
-
             const result = await this.connection.unsafe(schemaQuery);
 
-            // Define types for our schema data structure
-            interface Column {
-                name: string;
-                type: string;
-                nullable: boolean;
-                default: string | null;
-            }
+            const tables = buildSchemaMap(result);
 
-            interface Table {
-                schema: string;
-                name: string;
-                columns: Column[];
-            }
-
-            // Format schema information
-            const tables: Record<string, Table> = {};
-
-            for (const row of result) {
-                const tableKey = `${row.table_schema}.${row.table_name}`;
-                if (!tables[tableKey]) {
-                    tables[tableKey] = {
-                        schema: row.table_schema,
-                        name: row.table_name,
-                        columns: []
-                    };
-                }
-
-                tables[tableKey].columns.push({
-                    name: row.column_name,
-                    type: row.data_type,
-                    nullable: row.is_nullable === 'YES',
-                    default: row.column_default
-                });
-            }
 
             // Format as string for the AI model
             let schemaString = "Database Schema:\n\n";

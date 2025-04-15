@@ -1,3 +1,5 @@
+/* Factory function to create a database client */
+
 import { PostgresAdapter } from "./postgres-adapter";
 /* import { SupabaseAdapter } from "./supabase-adapter"; */
 

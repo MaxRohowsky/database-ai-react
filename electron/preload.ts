@@ -1,23 +1,9 @@
 import { ipcRenderer, contextBridge } from 'electron'
 import { AiModelConfig } from './services/ai'
-import { ConnectionDetails } from './services/database'
+
 
 // Chat-related types
-interface ChatMessage {
-  id: string;
-  type: 'user' | 'sql' | 'result';
-  content: string | Record<string, unknown>[];
-  columns?: string[];
-  error?: string;
-}
 
-interface Chat {
-  id: string;
-  title: string;
-  createdAt: number;
-  updatedAt: number;
-  messages: ChatMessage[];
-}
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
@@ -49,14 +35,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return 'hi logged to console';
   },
   testConnection: (config: ConnectionDetails) => ipcRenderer.invoke('testConnection', config),
-  generateSQL: (aiConfig: AiModelConfig, prompt: string, dbSchema?: string) => 
+  generateSQL: (aiConfig: AiModelConfig, prompt: string, dbSchema?: string) =>
     ipcRenderer.invoke('generateSQL', { aiConfig, prompt, dbSchema }),
-  executeSQL: (dbConfig: ConnectionDetails, query: string) => 
+  executeSQL: (dbConfig: ConnectionDetails, query: string) =>
     ipcRenderer.invoke('executeSQL', { dbConfig, query }),
-  fetchDbSchema: (dbConfig: ConnectionDetails) => 
+  fetchDbSchema: (dbConfig: ConnectionDetails) =>
     ipcRenderer.invoke('fetchDbSchema', dbConfig),
-  saveChats: (chats: Chat[]) => 
+  saveChats: (chats: Chat[]) =>
     ipcRenderer.invoke('saveChats', chats),
-  loadChats: () => 
+  loadChats: () =>
     ipcRenderer.invoke('loadChats')
 });

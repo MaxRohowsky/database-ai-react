@@ -1,13 +1,8 @@
+/* Public API with common database operations*/
+
 import { getDatabaseClient } from './get-database-client';
+import { SqlResult } from '../types';
 
-
-
-export interface SqlResult {
-  columns: string[];
-  rows: Record<string, unknown>[];
-  affectedRows?: number;
-  error?: string;
-}
 
 
 
@@ -37,13 +32,14 @@ export async function executeQuery(config: ConnectionDetails, query: string): Pr
   }
 }
 
-export async function fetchDatabaseSchema(config: ConnectionDetails) {
+export async function fetchDatabaseSchema(config: ConnectionDetails): Promise<{ schema: string | undefined, error?: string }> {
   try {
     const client = getDatabaseClient(config);
     return await client.fetchDatabaseSchema();
   } catch (error) {
     console.error('Schema fetch error:', error);
     return {
+      schema: undefined,
       error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
