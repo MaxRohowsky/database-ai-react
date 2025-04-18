@@ -1,4 +1,4 @@
-// src/components/RenameDialog.tsx
+/* eslint-disable react-refresh/only-export-components */
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
