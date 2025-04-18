@@ -92,7 +92,7 @@ export function ChatInput({
 
       // Add SQL message to store
       addMessageToCurrentChat({
-        type: "db",
+        type: "sql", // careful this needs to be fixed properly before changing to db
         content: sqlResponse.sqlQuery,
       });
     } catch (err) {

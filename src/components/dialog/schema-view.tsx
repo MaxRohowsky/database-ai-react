@@ -97,14 +97,18 @@ export function SchemaView({ open, onOpenChange, schema }: SchemaViewProps) {
           onValueChange={setActiveTab}
           className="w-full"
         >
-          <TabsList className="mb-2">
-            <TabsTrigger value="all">All Schemas</TabsTrigger>
-            {schemas.map((schema) => (
-              <TabsTrigger key={schema} value={schema}>
-                {schema}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="relative w-full overflow-x-auto">
+            <div className="flex min-w-full">
+              <TabsList className="inline-flex w-max border-b-0">
+                <TabsTrigger value="all">All Schemas</TabsTrigger>
+                {schemas.map((schema) => (
+                  <TabsTrigger key={schema} value={schema}>
+                    {schema}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+          </div>
 
           <TabsContent value="all" className="m-0">
             <SchemaTablesView
