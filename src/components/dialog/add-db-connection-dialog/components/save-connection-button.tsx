@@ -17,7 +17,7 @@ export const SaveConnectionButton = ({
   setShowAddDbConnectionDialog,
   isConnected,
 }: {
-  form: UseFormReturn<ConnectionDetails>;
+  form: UseFormReturn<DbConfig>;
   setShowAddDbConnectionDialog: Dispatch<SetStateAction<boolean>>;
   isConnected: boolean;
 }) => {

@@ -7,8 +7,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useAiConfigStore } from "@/store/ai-config-store";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAiModelStore } from "@/store/ai-model-store";
+import { useCallback, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
 import { Input } from "../ui/input";
 
 interface SelectAiModelDialogProps {
@@ -16,27 +25,30 @@ interface SelectAiModelDialogProps {
   setShowSelectAiModelDialog: (showSelectAiModelDialog: boolean) => void;
 }
 
+interface ApiKeysFormValues {
+  openaiApiKey: string;
+  anthropicApiKey: string;
+}
+
 function SelectAiModelDialog({
   showSelectAiModelDialog,
   setShowSelectAiModelDialog,
 }: SelectAiModelDialogProps) {
-  const { config: aiConfig, setConfig } = useAiConfigStore();
-  const [apiKey, setApiKey] = useState("");
-  const [model, setModel] = useState("gpt-3.5-turbo");
+  const { aiModelConfig, setAiModelConfig } = useAiModelStore();
+  const [activeTab, setActiveTab] = useState("openai");
 
-  useEffect(() => {
-    if (aiConfig) {
-      setApiKey(aiConfig.apiKey || "");
-      setModel(aiConfig.model || "gpt-3.5-turbo");
-    }
-  }, [aiConfig]);
+  const form = useForm<ApiKeysFormValues>({
+    defaultValues: {
+      openaiApiKey: aiModelConfig?.openai?.apiKey || "",
+      anthropicApiKey: aiModelConfig?.anthropic?.apiKey || "",
+    },
+  });
 
-  const handleSaveConfig = () => {
-    // Save the OpenAI configuration
-    setConfig({
-      provider: "openai",
-      apiKey: apiKey,
-      model: model,
+  const handleSaveConfig = (data: ApiKeysFormValues) => {
+    // Save the configurations
+    setAiModelConfig({
+      openai: { apiKey: data.openaiApiKey },
+      anthropic: { apiKey: data.anthropicApiKey },
     });
 
     setShowSelectAiModelDialog(false);
@@ -49,47 +61,85 @@ function SelectAiModelDialog({
     >
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Select AI Model</DialogTitle>
+          <DialogTitle>Configure API Keys</DialogTitle>
         </DialogHeader>
 
-        <div className="py-4">
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <label htmlFor="openai-api-key" className="text-sm font-medium">
-                API Key
-              </label>
-              <Input
-                id="openai-api-key"
-                type="password"
-                placeholder="sk-..."
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-            </div>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSaveConfig)}
+            className="space-y-4"
+          >
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="openai" className="flex items-center gap-2">
+                  <img
+                    src="/ai-icons/openai.svg"
+                    alt="OpenAI Logo"
+                    width={18}
+                    height={18}
+                    className="h-[18px] w-[18px]"
+                  />
+                  OpenAI
+                </TabsTrigger>
+                <TabsTrigger
+                  value="anthropic"
+                  className="flex items-center gap-2"
+                >
+                  <img
+                    src="/ai-icons/anthropic.svg"
+                    alt="Anthropic Logo"
+                    width={18}
+                    height={18}
+                    className="h-[18px] w-[18px]"
+                  />
+                  Anthropic
+                </TabsTrigger>
+              </TabsList>
 
-            <div className="grid gap-2">
-              <label htmlFor="openai-model" className="text-sm font-medium">
-                Model
-              </label>
-              <select
-                id="openai-model"
-                className="border-input bg-background ring-offset-background flex h-10 w-full rounded-md border px-3 py-2 text-sm"
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-              >
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                <option value="gpt-4">GPT-4</option>
-                <option value="gpt-4-turbo">GPT-4 Turbo</option>
-              </select>
-            </div>
-          </div>
-        </div>
+              <TabsContent value="openai" className="mt-4">
+                <FormField
+                  control={form.control}
+                  name="openaiApiKey"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>OpenAI API Key</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="sk-..."
+                          {...field}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
 
-        <DialogFooter>
-          <Button type="submit" onClick={handleSaveConfig}>
-            Save Configuration
-          </Button>
-        </DialogFooter>
+              <TabsContent value="anthropic" className="mt-4">
+                <FormField
+                  control={form.control}
+                  name="anthropicApiKey"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Anthropic API Key</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="sk-ant-..."
+                          {...field}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+            </Tabs>
+
+            <DialogFooter>
+              <Button type="submit">Save</Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
@@ -97,23 +147,19 @@ function SelectAiModelDialog({
 
 export function useSelectAiModelDialog() {
   const [showSelectAiModelDialog, setShowSelectAiModelDialog] = useState(false);
-  const [aiModel, setAiModel] = useState<string>("gpt-3.5-turbo");
 
   const SelectAiModelDialogCallback = useCallback(() => {
-    if (!aiModel) return null;
-
     return (
       <SelectAiModelDialog
         showSelectAiModelDialog={showSelectAiModelDialog}
         setShowSelectAiModelDialog={setShowSelectAiModelDialog}
       />
     );
-  }, [showSelectAiModelDialog, setShowSelectAiModelDialog, aiModel]);
+  }, [showSelectAiModelDialog, setShowSelectAiModelDialog]);
 
   return useMemo(
     () => ({
       setShowSelectAiModelDialog,
-      setAiModel,
       SelectAiModelDialog: SelectAiModelDialogCallback,
     }),
     [setShowSelectAiModelDialog, SelectAiModelDialogCallback],

@@ -6,7 +6,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { executeSqlQuery } from "@/services/sql-service";
+import { executeSql } from "@/services/sql-service";
 import { useChatStore } from "@/store/chat-store";
 import { useDbConnectionStore } from "@/store/db-connection-store";
 import { Edit, Loader2, Play } from "lucide-react";
@@ -18,17 +18,16 @@ export function DbChatMessage({
   setError,
   setIsLoading,
 }: {
-  message: ChatMessage;
+  message: Message;
   isLoading: boolean;
   setError: (error: string | null) => void;
   setIsLoading: (loading: boolean) => void;
 }) {
   const [editingSqlId, setEditingSqlId] = useState<string | null>(null);
   const [editedSqlContent, setEditedSqlContent] = useState<string>("");
-  const { updateMessage } = useChatStore();
-  const { getSelectedConnection } = useDbConnectionStore();
-  const dbConfig = getSelectedConnection();
-  const { addMessageToCurrentChat } = useChatStore();
+  const { updateMessage, addMessageToCurrentChat } = useChatStore();
+  const { getSelectedDbConfig } = useDbConnectionStore();
+  const dbConfig = getSelectedDbConfig(); // TODO: perhaps move to const above
 
   // Function to start editing SQL
   const startEditingSql = (messageId: string, content: string) => {
@@ -46,6 +45,7 @@ export function DbChatMessage({
   // Function to execute SQL query
   const executeQuery = async (sqlQuery: string) => {
     if (!dbConfig) {
+      // TODO: Add toast
       setError(
         "Database not configured. Please configure a database connection first.",
       );
@@ -57,9 +57,10 @@ export function DbChatMessage({
 
     try {
       // Check if this query has a RETURNING clause (PostgreSQL feature)
-      const hasReturningClause = /\bRETURNING\b/i.test(sqlQuery);
+      /*       const hasReturningClause = /\bRETURNING\b/i.test(sqlQuery); */
 
-      const result = await executeSqlQuery(sqlQuery, dbConfig);
+      const result = await executeSql(sqlQuery, dbConfig);
+
       if (result.error) {
         throw new Error(result.error);
       }
@@ -70,23 +71,11 @@ export function DbChatMessage({
           sqlQuery.trim(),
         );
 
-      // If query has RETURNING clause and returned data, we can store it directly
-      if (hasReturningClause && result.rows && result.rows.length > 0) {
-        // Add result message to store with special RETURNING data
-        addMessageToCurrentChat({
-          type: "result",
-          content: [], // Leave content empty to trigger the "Database Modified" view
-          columns: [],
-          affectedRows: result.rows.length,
-          originalQuery: sqlQuery,
-          returningRows: result.rows,
-          returningColumns: result.columns,
-        });
-      } else {
-        // Normal query processing (as before)
-        addMessageToCurrentChat({
-          type: "result",
-          content: result.rows || [],
+      // Normal query processing (as before)
+      addMessageToCurrentChat({
+        type: "db",
+        content: {
+          rows: result.rows || [],
           columns: result.columns || [],
           // If it's a modification query with zero rows returned, likely affected rows
           affectedRows:
@@ -94,9 +83,10 @@ export function DbChatMessage({
               ? result.affectedRows
               : undefined,
           // Store the original query for reference
-          originalQuery: sqlQuery,
-        });
-      }
+          sqlQuery: sqlQuery,
+        },
+      });
+      /*  } */
     } catch (err) {
       console.error("SQL execution error:", err);
       setError(
@@ -107,7 +97,7 @@ export function DbChatMessage({
     }
   };
 
-  // Handle clicks outside of the SQL editing area
+  // Handle clicks outside of the SQL editing area // TODO: Move to a hook
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (

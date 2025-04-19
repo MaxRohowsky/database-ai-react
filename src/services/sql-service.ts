@@ -1,6 +1,3 @@
-import { AiModelConfig } from "@/store/ai-config-store";
-import { ConnectionDetails } from "@/store/db-connection-store";
-
 /**
  * Generates SQL using AI
  * @param query - The user's query
@@ -9,21 +6,16 @@ import { ConnectionDetails } from "@/store/db-connection-store";
  * @returns The generated SQL
  */
 export async function generateSql(
-  query: string,
-  aiConfig: AiModelConfig,
-  dbSchema?: string,
-): Promise<{
-  sqlQuery: string;
-  error?: string;
-}> {
+  aiModelSelection: AiModelSelection,
+  apiKey: string,
+  prompt: string,
+  dbSchema?: DbSchemaResponse["schema"],
+): Promise<SqlGenerationResponse> {
   try {
-    if (!aiConfig) {
-      throw new Error("AI configuration not found");
-    }
-
-    const response = await window.electronAPI.generateSQL(
-      aiConfig,
-      query,
+    const response = await window.electronAPI.generateSql(
+      aiModelSelection,
+      apiKey,
+      prompt,
       dbSchema,
     );
 
@@ -54,34 +46,31 @@ export async function generateSql(
  * @param dbConfig - The database configuration
  * @returns The result of the SQL query
  */
-export async function executeSqlQuery(
+export async function executeSql(
   sql: string,
-  dbConfig: ConnectionDetails,
-): Promise<{
-  rows?: Record<string, unknown>[];
-  columns?: string[];
-  affectedRows?: number;
-  error?: string;
-}> {
+  dbConfig: DbConfig,
+): Promise<SqlExecutionResponse> {
   try {
     if (!dbConfig) {
       throw new Error("Database configuration not found");
     }
 
-    const result = await window.electronAPI.executeSQL(dbConfig, sql);
+    const result = await window.electronAPI.executeSql(dbConfig, sql);
 
     if (result.error) {
       throw new Error(result.error);
     }
 
     return {
-      rows: result.rows || [],
       columns: result.columns || [],
+      rows: result.rows || [],
       affectedRows: result.affectedRows,
     };
   } catch (error) {
     console.error("SQL execution error:", error);
     return {
+      columns: [],
+      rows: [],
       error:
         error instanceof Error
           ? error.message
@@ -95,12 +84,9 @@ export async function executeSqlQuery(
  * @param dbConfig - The database configuration
  * @returns The database schema
  */
-export async function fetchDatabaseSchema(
-  dbConfig: ConnectionDetails,
-): Promise<{
-  schema?: string;
-  error?: string;
-}> {
+export async function fetchDbSchema(
+  dbConfig: DbConfig,
+): Promise<DbSchemaResponse> {
   try {
     if (!dbConfig) {
       throw new Error("Database configuration not found");

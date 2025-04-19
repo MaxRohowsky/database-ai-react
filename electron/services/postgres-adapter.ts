@@ -1,7 +1,5 @@
-import postgres from 'postgres';
-import { SqlResult } from '../types';
-import { isUpdateQuery, buildSchemaMap, formatSchemaString } from './utils';
-
+import postgres from "postgres";
+import { buildSchemaMap, formatSchemaString, isUpdateQuery } from "./utils";
 
 const schemaQuery = `
 SELECT 
@@ -21,76 +19,79 @@ ORDER BY
   ordinal_position;
 `;
 
+export class PostgresAdapter implements DbAdapter {
+  private connection: postgres.Sql;
 
-export class PostgresAdapter implements DatabaseAdapter {
-    private connection: postgres.Sql;
+  constructor(config: DbConfig) {
+    this.connection = postgres({
+      host: config.host,
+      port: parseInt(config.port),
+      database: config.database,
+      user: config.user,
+      password: config.password,
+      ssl: config.certFile
+        ? {
+            ca: config.certFile,
+          }
+        : false,
+      idle_timeout: 20,
+      connect_timeout: 10,
+    });
+  }
 
-    constructor(config: ConnectionDetails) {
-        this.connection = postgres({
-            host: config.host,
-            port: parseInt(config.port),
-            database: config.database,
-            user: config.user,
-            password: config.password,
-            ssl: config.certFile ? {
-                ca: config.certFile,
-            } : false,
-            idle_timeout: 20,
-            connect_timeout: 10,
-        });
+  async testDbConnection(): Promise<boolean> {
+    try {
+      await this.connection`SELECT 1`;
+      return true;
+    } catch (error) {
+      return false;
     }
+  }
 
-    async testConnection(): Promise<boolean> {
-        try {
-            await this.connection`SELECT 1`;
-            return true;
-        } catch (error) {
-            return false;
-        }
+  async executeSql(query: string): Promise<SqlResult> {
+    try {
+      const result = await this.connection.unsafe(query);
+
+      const isUpdate = isUpdateQuery(query);
+
+      const affectedRows = isUpdate ? result.length : undefined;
+
+      const columns = result.length > 0 ? Object.keys(result[0]) : [];
+
+      return {
+        rows: result,
+        columns,
+        affectedRows,
+      };
+    } catch (error) {
+      return {
+        rows: [],
+        columns: [],
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
     }
+  }
 
-    async executeQuery(query: string): Promise<SqlResult> {
-        try {
-            const result = await this.connection.unsafe(query);
+  async fetchDbSchema(): Promise<{
+    schema: string | undefined;
+    error?: string;
+  }> {
+    try {
+      const schemaRows = await this.connection.unsafe(schemaQuery);
 
-            const isUpdate = isUpdateQuery(query);
+      const tableStructure = buildSchemaMap(schemaRows);
 
-            const affectedRows = isUpdate ? result.length : undefined;
+      const formattedSchemaText = formatSchemaString(tableStructure);
 
-            const columns = result.length > 0 ? Object.keys(result[0]) : [];
-
-            return {
-                rows: result,
-                columns,
-                affectedRows,
-            };
-        } catch (error) {
-            return {
-                rows: [],
-                columns: [],
-                error: error instanceof Error ? error.message : 'Unknown error',
-            };
-        }
+      return {
+        schema: formattedSchemaText,
+      };
+    } catch (error) {
+      console.error("PostgreSQL schema fetch error:", error);
+      return {
+        schema: undefined,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
     }
-
-    async fetchDatabaseSchema(): Promise<{ schema: string | undefined, error?: string }> {
-        try {
-            const schemaRows = await this.connection.unsafe(schemaQuery);
-
-            const tableStructure = buildSchemaMap(schemaRows);
-
-            const formattedSchemaText = formatSchemaString(tableStructure);
-
-            return {
-                schema: formattedSchemaText
-            };
-        } catch (error) {
-            console.error('PostgreSQL schema fetch error:', error);
-            return {
-                schema: undefined,
-                error: error instanceof Error ? error.message : 'Unknown error'
-            };
-        }
-    }
-
+  }
 }

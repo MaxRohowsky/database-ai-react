@@ -1,9 +1,8 @@
 /* Factory function to create a database client */
 
 import { PostgresAdapter } from "./postgres-adapter";
-/* import { SupabaseAdapter } from "./supabase-adapter"; */
 
-export function getDatabaseClient(config: ConnectionDetails): DatabaseAdapter {
+export function getDatabaseClient(config: DbConfig): DbAdapter {
   switch (config.engine) {
     case "postgres":
       return new PostgresAdapter(config);

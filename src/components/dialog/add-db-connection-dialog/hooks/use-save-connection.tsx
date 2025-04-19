@@ -2,8 +2,8 @@ import { readFileAsText } from "@/lib/utils";
 import { useDbConnectionStore } from "@/store/db-connection-store";
 import { UseFormReturn } from "react-hook-form";
 
-export const useSaveConnection = (form: UseFormReturn<ConnectionDetails>) => {
-  const { addConnection, updateConnection, setSelectedConnectionId } =
+export const useSaveConnection = (form: UseFormReturn<DbConfig>) => {
+  const { addDbConfig, updateDbConfig, setSelectedDbConfigId } =
     useDbConnectionStore();
 
   const saveConnection = async () => {
@@ -13,7 +13,7 @@ export const useSaveConnection = (form: UseFormReturn<ConnectionDetails>) => {
     const connectionId = formData.id || `conn-${Date.now()}`;
 
     // Create a copy of the form data for the connection details
-    const formDataToSave: ConnectionDetails = {
+    const formDataToSave: DbConfig = {
       ...formData,
       certFile:
         formData.certFile instanceof File
@@ -25,12 +25,12 @@ export const useSaveConnection = (form: UseFormReturn<ConnectionDetails>) => {
     // Check if it's an edit or new connection
     if (connectionId && formData.id) {
       // Update existing connection
-      const updatedConnection = updateConnection(formDataToSave);
-      setSelectedConnectionId(updatedConnection.id);
+      const updatedDbConfig = updateDbConfig(formDataToSave);
+      setSelectedDbConfigId(updatedDbConfig.id);
     } else {
       // Add new connection
-      const newConnection = addConnection(formDataToSave);
-      setSelectedConnectionId(newConnection.id);
+      const newDbConfig = addDbConfig(formDataToSave);
+      setSelectedDbConfigId(newDbConfig.id);
     }
 
     return formDataToSave;

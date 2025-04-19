@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchDatabaseSchema, generateSql } from "@/services/sql-service";
-import { useAiConfigStore } from "@/store/ai-config-store";
+import { fetchDbSchema, generateSql } from "@/services/sql-service";
+import { useAiModelStore } from "@/store/ai-model-store";
 import { ChevronUp, Loader2, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -26,9 +26,9 @@ export function ChatInput({
 }) {
   const [inputValue, setInputValue] = useState("");
   const [enterToSend, setEnterToSend] = useState(false);
-  const { config: aiConfig } = useAiConfigStore();
-  const { getSelectedConnection } = useDbConnectionStore();
-  const dbConfig = getSelectedConnection();
+  const { aiModelConfig, aiModelSelection } = useAiModelStore();
+  const { getSelectedDbConfig } = useDbConnectionStore();
+  const dbConfig = getSelectedDbConfig();
   const { addMessageToCurrentChat } = useChatStore();
 
   // Load enter-to-send preference from localStorage
@@ -48,8 +48,8 @@ export function ChatInput({
   const handleSubmit = async () => {
     if (!inputValue.trim()) return;
 
-    if (!aiConfig) {
-      setError("Please configure an OpenAI API key first.");
+    if (!aiModelConfig || !aiModelSelection) {
+      setError("Please configure an OpenAI API key first and select a model.");
       return;
     }
 
@@ -71,7 +71,7 @@ export function ChatInput({
       if (dbConfig) {
         try {
           console.log("Fetching database schema for context...");
-          const schemaResult = await fetchDatabaseSchema(dbConfig);
+          const schemaResult = await fetchDbSchema(dbConfig);
           if (schemaResult && !schemaResult.error) {
             dbSchema = schemaResult.schema;
             console.log("Successfully fetched database schema");
@@ -83,8 +83,25 @@ export function ChatInput({
         }
       }
 
+      console.log("aiModelSelection", aiModelSelection);
+      console.log("aiModelConfig", aiModelConfig);
+
+      const apiKey = getSelectedModelApiKey(aiModelConfig, aiModelSelection);
+
+      if (!apiKey) {
+        setError(
+          "Please configure an OpenAI API key first and select a model.",
+        );
+        return;
+      }
+
       // Generate SQL with AI using the service
-      const sqlResponse = await generateSql(userQuery, aiConfig, dbSchema);
+      const sqlResponse = await generateSql(
+        aiModelSelection, // prov & model
+        apiKey,
+        userQuery,
+        dbSchema,
+      );
 
       if (sqlResponse.error) {
         throw new Error(sqlResponse.error);
@@ -92,7 +109,7 @@ export function ChatInput({
 
       // Add SQL message to store
       addMessageToCurrentChat({
-        type: "sql", // careful this needs to be fixed properly before changing to db
+        type: "ai",
         content: sqlResponse.sqlQuery,
       });
     } catch (err) {
@@ -132,7 +149,7 @@ export function ChatInput({
               variant="outline"
               className={"w-[100px] rounded-r-none bg-blue-500 text-white"}
               onClick={handleSubmit}
-              disabled={!aiConfig || isLoading || !inputValue.trim()}
+              disabled={!aiModelConfig || isLoading || !inputValue.trim()}
             >
               {isLoading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -170,4 +187,18 @@ export function ChatInput({
       </div>
     </div>
   );
+}
+
+function getSelectedModelApiKey(
+  config: AiModelConfig,
+  selection: AiModelSelection,
+): string | null {
+  switch (selection.selectedProvider) {
+    case "openai":
+      return config.openai?.apiKey ?? null;
+    case "anthropic":
+      return config.anthropic?.apiKey ?? null;
+    default:
+      return null;
+  }
 }

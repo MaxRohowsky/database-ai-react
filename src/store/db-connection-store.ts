@@ -1,37 +1,36 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 // Constants for localStorage keys
-export const DB_CONNECTIONS_STORAGE_KEY = 'databaseConnections';
-export const ACTIVE_CONNECTION_ID_KEY = 'activeConnectionId';
+export const DB_CONNECTIONS_STORAGE_KEY = "databaseConnections";
+export const ACTIVE_CONNECTION_ID_KEY = "activeConnectionId";
 
-
-interface DbConnectionStore {
+interface DbConfigStore {
   // State
-  connections: ConnectionDetails[];
-  selectedConnectionId: string | null;
+  dbConfigs: DbConfig[];
+  selectedDbConfigId: string | null;
   isLoaded: boolean;
 
   // Actions
-  setConnections: (connections: ConnectionDetails[]) => void;
-  setSelectedConnectionId: (id: string | null) => void;
-  getSelectedConnection: () => ConnectionDetails | null;
-  addConnection: (connection: ConnectionDetails) => ConnectionDetails;
-  updateConnection: (connection: ConnectionDetails) => ConnectionDetails;
-  removeConnection: (connectionId: string) => void;
+  setDbConfigs: (dbConfigs: DbConfig[]) => void;
+  setSelectedDbConfigId: (id: string | null) => void;
+  getSelectedDbConfig: () => DbConfig | null;
+  addDbConfig: (dbConfig: DbConfig) => DbConfig;
+  updateDbConfig: (dbConfig: DbConfig) => DbConfig;
+  removeDbConfig: (dbConfigId: string) => void;
   setIsLoaded: (isLoaded: boolean) => void;
 }
 
-export const useDbConnectionStore = create<DbConnectionStore>((set, get) => ({
+export const useDbConnectionStore = create<DbConfigStore>((set, get) => ({
   // Initial state
-  connections: [],
-  selectedConnectionId: null,
+  dbConfigs: [],
+  selectedDbConfigId: null,
   isLoaded: false,
 
   // Actions
-  setConnections: (connections) => set({ connections }),
+  setDbConfigs: (dbConfigs: DbConfig[]) => set({ dbConfigs }),
 
-  setSelectedConnectionId: (id) => {
-    set({ selectedConnectionId: id });
+  setSelectedDbConfigId: (id: string | null) => {
+    set({ selectedDbConfigId: id });
 
     // Persist the selection to localStorage
     if (id) {
@@ -41,61 +40,61 @@ export const useDbConnectionStore = create<DbConnectionStore>((set, get) => ({
     }
   },
 
-  getSelectedConnection: () => {
-    const { connections, selectedConnectionId } = get();
-    if (!selectedConnectionId) return null;
-    return connections.find(conn => conn.id === selectedConnectionId) || null;
+  setIsLoaded: (isLoaded: boolean) => set({ isLoaded }),
+
+  getSelectedDbConfig: (): DbConfig | null => {
+    const { dbConfigs, selectedDbConfigId } = get();
+    if (!selectedDbConfigId) return null;
+    return dbConfigs.find((config) => config.id === selectedDbConfigId) || null;
   },
 
-  addConnection: (connection) => {
-    set(state => ({
-      connections: [...state.connections, connection]
+  addDbConfig: (dbConfig: DbConfig) => {
+    set((state) => ({
+      dbConfigs: [...state.dbConfigs, dbConfig],
     }));
 
     // Save to localStorage
-    saveConnectionsToPersistentStorage(get().connections);
+    saveDbConfigsToPersistentStorage(get().dbConfigs);
 
-    return connection;
+    return dbConfig;
   },
 
-  updateConnection: (connection) => {
-    set(state => ({
-      connections: state.connections.map(conn =>
-        conn.id === connection.id ? connection : conn
-      )
+  updateDbConfig: (dbConfig: DbConfig): DbConfig => {
+    set((state) => ({
+      dbConfigs: state.dbConfigs.map((config) =>
+        config.id === dbConfig.id ? dbConfig : config,
+      ),
     }));
 
     // Save to localStorage
-    saveConnectionsToPersistentStorage(get().connections);
+    saveDbConfigsToPersistentStorage(get().dbConfigs);
 
-    return connection;
+    return dbConfig;
   },
 
-  removeConnection: (connectionId) => {
-    const { selectedConnectionId } = get();
+  removeDbConfig: (dbConfigId: string) => {
+    const { selectedDbConfigId } = get();
 
-    set(state => ({
-      connections: state.connections.filter(conn => conn.id !== connectionId)
+    set((state) => ({
+      dbConfigs: state.dbConfigs.filter((config) => config.id !== dbConfigId),
     }));
 
     // If we're removing the selected connection, clear the selection
-    if (selectedConnectionId === connectionId) {
-      get().setSelectedConnectionId(null);
+    if (selectedDbConfigId === dbConfigId) {
+      get().setSelectedDbConfigId(null);
     }
 
     // Save to localStorage
-    saveConnectionsToPersistentStorage(get().connections);
+    saveDbConfigsToPersistentStorage(get().dbConfigs);
   },
-
-  setIsLoaded: (isLoaded) => set({ isLoaded })
 }));
 
 // Helper function to save connections to localStorage
-function saveConnectionsToPersistentStorage(connections: ConnectionDetails[]) {
+function saveDbConfigsToPersistentStorage(configs: DbConfig[]) {
   try {
-    localStorage.setItem(DB_CONNECTIONS_STORAGE_KEY, JSON.stringify(connections));
+    localStorage.setItem(DB_CONNECTIONS_STORAGE_KEY, JSON.stringify(configs));
   } catch (error) {
-    console.error('Failed to save connections to localStorage:', error);
+    console.error("Failed to save connections to localStorage:", error);
   }
 }
 
@@ -103,33 +102,43 @@ function saveConnectionsToPersistentStorage(connections: ConnectionDetails[]) {
 export function initializeDbConnectionStore() {
   try {
     // Get all connections
-    const savedConnectionsJson = localStorage.getItem(DB_CONNECTIONS_STORAGE_KEY);
-    if (savedConnectionsJson) {
+    const savedDbConfigsJson = localStorage.getItem(DB_CONNECTIONS_STORAGE_KEY);
+    if (savedDbConfigsJson) {
       try {
-        const connections = JSON.parse(savedConnectionsJson) as ConnectionDetails[];
+        const dbConfigs = JSON.parse(savedDbConfigsJson) as DbConfig[];
 
         // Validate the connections
-        const validConnections = connections.filter(conn => {
+        const validDbConfigs = dbConfigs.filter((dbConfig) => {
           // Ensure all fields are present
-          return conn.id && conn.name && conn.host &&
-            conn.port && conn.database && conn.user;
+          return (
+            dbConfig.id &&
+            dbConfig.name &&
+            dbConfig.host &&
+            dbConfig.port &&
+            dbConfig.database &&
+            dbConfig.user
+          );
         });
 
-        useDbConnectionStore.setState({ connections: validConnections });
+        useDbConnectionStore.setState({ dbConfigs: validDbConfigs });
       } catch (parseError) {
-        console.error('Failed to parse saved connections JSON:', parseError);
+        console.error("Failed to parse saved connections JSON:", parseError);
       }
     }
 
     // Get selected connection ID
-    const activeConnectionId = localStorage.getItem(ACTIVE_CONNECTION_ID_KEY);
-    if (activeConnectionId) {
+    const activeDbConfigId = localStorage.getItem(ACTIVE_CONNECTION_ID_KEY);
+    if (activeDbConfigId) {
       // Verify the connection exists
-      const { connections } = useDbConnectionStore.getState();
-      const activeConnectionExists = connections.some(conn => conn.id === activeConnectionId);
+      const { dbConfigs } = useDbConnectionStore.getState();
+      const activeDbConfigExists = dbConfigs.some(
+        (dbConfig) => dbConfig.id === activeDbConfigId,
+      );
 
-      if (activeConnectionExists) {
-        useDbConnectionStore.setState({ selectedConnectionId: activeConnectionId });
+      if (activeDbConfigExists) {
+        useDbConnectionStore.setState({
+          selectedDbConfigId: activeDbConfigId,
+        });
       } else {
         // If the selected connection doesn't exist anymore, clear the active ID
         localStorage.removeItem(ACTIVE_CONNECTION_ID_KEY);
@@ -139,7 +148,7 @@ export function initializeDbConnectionStore() {
     // Mark as loaded
     useDbConnectionStore.setState({ isLoaded: true });
   } catch (error) {
-    console.error('Failed to initialize DB connection store:', error);
+    console.error("Failed to initialize DB connection store:", error);
     useDbConnectionStore.setState({ isLoaded: true });
   }
-} 
+}

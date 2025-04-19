@@ -1,17 +1,17 @@
 import { SchemaView } from "@/components/dialog/schema-view";
-import { fetchDatabaseSchema } from "@/services/sql-service";
+import { fetchDbSchema } from "@/services/sql-service";
 import { useDbConnectionStore } from "@/store/db-connection-store";
 import { Database } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function SelectedDBConnection() {
-  const { getSelectedConnection } = useDbConnectionStore();
+  const { getSelectedDbConfig } = useDbConnectionStore();
   const [showSchemaDialog, setShowSchemaDialog] = useState(false);
   const [dbSchema, setDbSchema] = useState<string | undefined>(undefined);
   const [fetchingSchema, setFetchingSchema] = useState(false);
 
-  const selectedConnection = getSelectedConnection();
+  const selectedDbConfig = getSelectedDbConfig();
 
   // Add keydown event listener for Tab key
   useEffect(() => {
@@ -26,10 +26,10 @@ export default function SelectedDBConnection() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [selectedConnection]); // Re-add listener when connection changes
+  }, [selectedDbConfig]); // Re-add listener when connection changes
 
   const handleFetchSchema = async () => {
-    if (!selectedConnection) {
+    if (!selectedDbConfig) {
       toast.error("Please select a database connection first");
       return;
     }
@@ -38,7 +38,7 @@ export default function SelectedDBConnection() {
 
     setFetchingSchema(true);
     try {
-      const schemaResult = await fetchDatabaseSchema(selectedConnection);
+      const schemaResult = await fetchDbSchema(selectedDbConfig);
       if (schemaResult.error) {
         throw new Error(schemaResult.error);
       }
@@ -64,16 +64,18 @@ export default function SelectedDBConnection() {
         title="Click or press Tab to view database schema"
       >
         <Database
-          className={`mr-2 h-4 w-4 ${selectedConnection ? "text-blue-600" : ""}`}
+          className={`mr-2 h-4 w-4 ${selectedDbConfig ? "text-blue-600" : ""}`}
         />
-        <span className="max-w-[150px] truncate font-medium">
-          {selectedConnection ? (
+        <span className="text-xl font-semibold">
+          {selectedDbConfig ? (
             <div className="flex items-center gap-1">
-              <span className="text-blue-600">{selectedConnection.name}</span>
-              {selectedConnection.database && (
-                <span className="text-muted-foreground text-xs">
-                  ({selectedConnection.database})
-                </span>
+              <span className="">{selectedDbConfig.name}</span>
+              {selectedDbConfig.database && (
+                <img
+                  src={`/db-icons/${selectedDbConfig.database}.svg`}
+                  alt={selectedDbConfig.database}
+                  className="mr-2 h-4 w-4"
+                />
               )}
             </div>
           ) : (

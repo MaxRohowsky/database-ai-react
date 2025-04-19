@@ -16,8 +16,8 @@ import Marquee from "react-fast-marquee";
 import SidebarIcon from "./sidebar-icon";
 export default function NewChatButton() {
   const { createNewChat } = useChatStore();
-  const { connections, setSelectedConnectionId } = useDbConnectionStore();
-  const [connectionStatuses, setConnectionStatuses] = useState<
+  const { dbConfigs, setSelectedDbConfigId } = useDbConnectionStore();
+  const [dbConnectionStatuses, setDbConnectionStatuses] = useState<
     Record<string, boolean>
   >({});
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -31,7 +31,7 @@ export default function NewChatButton() {
     AddDbConnectionModal,
   } = useAddDbConnectionModal();
 
-  const { removeConnection } = useDbConnectionStore();
+  const { removeDbConfig } = useDbConnectionStore();
 
   // Check connection status when dropdown is opened and every 5 seconds while open
   useEffect(() => {
@@ -40,17 +40,18 @@ export default function NewChatButton() {
     const checkConnections = async () => {
       const statuses: Record<string, boolean> = {};
 
-      for (const conn of connections) {
+      for (const dbConfig of dbConfigs) {
         try {
-          const isConnected = await window.electronAPI.testConnection(conn);
-          statuses[conn.id] = isConnected;
+          const isConnected =
+            await window.electronAPI.testDbConnection(dbConfig);
+          statuses[dbConfig.id] = isConnected;
         } catch (error) {
-          console.error(`Error checking connection ${conn.name}:`, error);
-          statuses[conn.id] = false;
+          console.error(`Error checking connection ${dbConfig.name}:`, error);
+          statuses[dbConfig.id] = false;
         }
       }
 
-      setConnectionStatuses(statuses);
+      setDbConnectionStatuses(statuses);
     };
 
     // Only check connections when dropdown is open
@@ -68,28 +69,25 @@ export default function NewChatButton() {
         clearInterval(intervalId);
       }
     };
-  }, [isDropdownOpen, connections]);
+  }, [isDropdownOpen, dbConfigs]);
 
-  const handleCreateChatWithConnection = (connectionId: string) => {
-    setSelectedConnectionId(connectionId);
+  const handleCreateChatWithConnection = (dbConfigId: string) => {
+    setSelectedDbConfigId(dbConfigId);
     createNewChat();
   };
 
-  const handleEditConnection = (connection: ConnectionDetails) => {
-    console.log("Editing connection:", connection);
+  const handleEditConnection = (dbConfig: DbConfig) => {
+    console.log("Editing connection:", dbConfig);
     // Set the connection to edit and open the modal
-    setConnectionToEdit(connection);
+    setConnectionToEdit(dbConfig);
     setShowAddDbConnectionDialog(true);
   };
 
   // Delete connection
-  const handleDeleteConnection = (
-    e: React.MouseEvent,
-    connectionId: string,
-  ) => {
+  const handleDeleteConnection = (e: React.MouseEvent, dbConfigId: string) => {
     e.stopPropagation();
-    console.log("Removing connection:", connectionId);
-    removeConnection(connectionId);
+    console.log("Removing connection:", dbConfigId);
+    removeDbConfig(dbConfigId);
   };
 
   return (
@@ -109,28 +107,28 @@ export default function NewChatButton() {
       >
         <DropdownMenuLabel>Select Database:</DropdownMenuLabel>
 
-        {connections.map((conn) => (
+        {dbConfigs.map((dbConfig) => (
           <DropdownMenuItem
-            key={conn.id}
+            key={dbConfig.id}
             className="relative m-1"
-            onClick={() => handleCreateChatWithConnection(conn.id)}
-            onMouseEnter={() => setHoveredConnection(conn.id)}
+            onClick={() => handleCreateChatWithConnection(dbConfig.id)}
+            onMouseEnter={() => setHoveredConnection(dbConfig.id)}
             onMouseLeave={() => setHoveredConnection(null)}
           >
             <Database
               className={`m-1 h-4 w-4 ${
-                connectionStatuses[conn.id] !== undefined
-                  ? connectionStatuses[conn.id]
+                dbConnectionStatuses[dbConfig.id] !== undefined
+                  ? dbConnectionStatuses[dbConfig.id]
                     ? "text-green-500"
                     : "text-red-500"
                   : ""
               }`}
             />
             <div className="flex flex-col">
-              <span>{conn.name}</span>
+              <span>{dbConfig.name}</span>
               <span className="text-muted-foreground w-36 overflow-hidden text-sm">
-                <Marquee play={hoveredConnection === conn.id}>
-                  {conn.database}@{conn.host}
+                <Marquee play={hoveredConnection === dbConfig.id}>
+                  {dbConfig.database}@{dbConfig.host}
                 </Marquee>
               </span>
             </div>
@@ -139,7 +137,7 @@ export default function NewChatButton() {
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6"
-                onClick={() => handleEditConnection(conn)}
+                onClick={() => handleEditConnection(dbConfig)}
               >
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
@@ -147,7 +145,7 @@ export default function NewChatButton() {
                 variant="ghost"
                 size="icon"
                 className="text-destructive h-6 w-6"
-                onClick={(e) => handleDeleteConnection(e, conn.id)}
+                onClick={(e) => handleDeleteConnection(e, dbConfig.id)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>

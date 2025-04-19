@@ -3,9 +3,9 @@ import { UseFormReturn } from "react-hook-form";
 import { emptyValues } from "../add-db-connection-dialog";
 
 interface UseResetFormProps {
-  form: UseFormReturn<ConnectionDetails>;
+  form: UseFormReturn<DbConfig>;
   showAddDbConnectionDialog: boolean;
-  connectionToEdit?: ConnectionDetails;
+  connectionToEdit?: DbConfig;
 }
 
 export function useInitForm({

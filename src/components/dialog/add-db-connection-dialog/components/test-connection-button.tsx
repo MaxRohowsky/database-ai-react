@@ -1,26 +1,26 @@
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2, RotateCcw } from "lucide-react";
-import type { ConnectionStatus } from "../hooks/use-test-connection";
+
 export const TestConnectionButton = ({
   isLoading,
-  connectionStatus,
-  testConnection,
+  dbConnectionStatus,
+  testDbConnection,
 }: {
   isLoading: boolean;
-  connectionStatus: ConnectionStatus;
-  testConnection: () => Promise<boolean>;
+  dbConnectionStatus: DbConnectionStatus;
+  testDbConnection: () => Promise<boolean>;
 }) => {
   const handleTestConnection = () => {
-    testConnection();
+    testDbConnection();
   };
 
   return (
     <Button
       type="button"
       variant={
-        connectionStatus === "success"
+        dbConnectionStatus === "success"
           ? "default"
-          : connectionStatus === "error"
+          : dbConnectionStatus === "error"
             ? "destructive"
             : "outline"
       }
@@ -33,12 +33,12 @@ export const TestConnectionButton = ({
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Testing
         </>
-      ) : connectionStatus === "success" ? (
+      ) : dbConnectionStatus === "success" ? (
         <>
           <CheckCircle className="mr-2 h-4 w-4" />
           Success
         </>
-      ) : connectionStatus === "error" ? (
+      ) : dbConnectionStatus === "error" ? (
         <>
           <RotateCcw className="mr-2 h-4 w-4" />
           Retry

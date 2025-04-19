@@ -55,14 +55,14 @@ function AddDbConnectionModal({
 }: {
   showAddDbConnectionDialog: boolean;
   setShowAddDbConnectionDialog: Dispatch<SetStateAction<boolean>>;
-  connectionToEdit?: ConnectionDetails;
+  connectionToEdit?: DbConfig;
 }) {
-  const form = useForm<ConnectionDetails>({
+  const form = useForm<DbConfig>({
     defaultValues: emptyValues,
   });
 
   // Test Connection State needs to be available to Save and Test buttons
-  const { isLoading, connectionStatus, isConnected, testConnection } =
+  const { isLoading, dbConnectionStatus, isConnected, testDbConnection } =
     useTestConnection(form);
 
   useInitForm({
@@ -98,8 +98,8 @@ function AddDbConnectionModal({
         <DialogFooter className="flex items-center justify-between">
           <TestConnectionButton
             isLoading={isLoading}
-            connectionStatus={connectionStatus}
-            testConnection={testConnection}
+            dbConnectionStatus={dbConnectionStatus}
+            testDbConnection={testDbConnection}
           />
           <SaveConnectionButton
             form={form}
@@ -116,7 +116,7 @@ export function useAddDbConnectionModal() {
   const [showAddDbConnectionDialog, setShowAddDbConnectionDialog] =
     useState(false);
   const [connectionToEdit, setConnectionToEdit] = useState<
-    ConnectionDetails | undefined
+    DbConfig | undefined
   >();
 
   // Reset connectionToEdit when dialog closes
@@ -150,11 +150,7 @@ export function useAddDbConnectionModal() {
   );
 }
 
-function ConnectionNameField({
-  form,
-}: {
-  form: UseFormReturn<ConnectionDetails>;
-}) {
+function ConnectionNameField({ form }: { form: UseFormReturn<DbConfig> }) {
   return (
     <FormField
       control={form.control}
@@ -177,11 +173,7 @@ function ConnectionNameField({
   );
 }
 
-function DatabaseEngineField({
-  form,
-}: {
-  form: UseFormReturn<ConnectionDetails>;
-}) {
+function DatabaseEngineField({ form }: { form: UseFormReturn<DbConfig> }) {
   return (
     <FormField
       control={form.control}
@@ -200,7 +192,7 @@ function DatabaseEngineField({
             <SelectContent>
               <SelectItem value="postgres">
                 <img
-                  src="/db-icons/postgresql.svg"
+                  src="/db-icons/postgres.svg"
                   alt="PostgreSQL"
                   className="mr-2 h-4 w-4"
                 />

@@ -10,7 +10,7 @@ import { UseFormReturn } from "react-hook-form";
 export default function ConfigForm({
   form,
 }: {
-  form: UseFormReturn<ConnectionDetails>;
+  form: UseFormReturn<DbConfig>;
 }) {
   return (
     <>

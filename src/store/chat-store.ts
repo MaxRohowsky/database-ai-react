@@ -1,55 +1,5 @@
 import { create } from "zustand";
 
-
-/* export interface ChatMessage {
-  id: string;
-  type: "user" | "sql" | "result";
-  content: string | Record<string, unknown>[];
-  columns?: string[];
-  error?: string;
-  affectedRows?: number;
-  originalQuery?: string;
-  showExactCount?: boolean;
-  returningRows?: Record<string, unknown>[];
-  returningColumns?: string[];
-} */
-
-/* export interface Chat {
-  id: string;
-  title: string;
-  createdAt: number;
-  updatedAt: number;
-  messages: ChatMessage[];
-  isFavourite: boolean;
-  dbConnectionId?: string;
-}
- */
-/* export interface Chat {
-  id: string;
-  title: string;
-  createdAt: number;
-  updatedAt: number;
-  messages: ChatMessage[];
-  isFavourite: boolean;
-} */
-
-interface ChatStore {
-  // State
-  chats: Chat[];
-  currentChatId: string | null;
-
-  // Actions
-  setCurrentChatId: (id: string | null) => void;
-  createNewChat: () => void;
-  deleteChat: (id: string) => void;
-  favouriteChat: (id: string) => void;
-  getCurrentChat: () => Chat | null;
-  addMessageToCurrentChat: (message: Omit<ChatMessage, "id">) => void;
-  updateMessage: (messageId: string, updates: Partial<ChatMessage>) => void;
-  setChats: (chats: Chat[]) => void;
-  renameChat: (id: string, newTitle: string) => void;
-}
-
 // Storage constants
 const STORAGE_KEY = "database-ai-chats";
 
@@ -59,14 +9,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   currentChatId: null,
 
   // Actions
-  setCurrentChatId: (id) => set({ currentChatId: id }),
+  setCurrentChatId: (chatId) => set({ currentChatId: chatId }),
 
-  setChats: (chats) => set({ chats }),
-
-  createNewChat: () => {
-    // Get the current selected database connection ID
-    /*     const selectedConnectionId = useDbConnectionStore.getState().selectedConnectionId; */
-
+  createNewChat: (): void => {
+    // Create a new chat
     const newChat: Chat = {
       id: Date.now().toString(),
       title: `New Chat ${get().chats.length + 1}`,
@@ -74,11 +20,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       updatedAt: Date.now(),
       messages: [],
       isFavourite: false,
-      /*  dbConnectionId: selectedConnectionId || undefined // Fix the type error */
     };
 
     set((state) => ({
+      // Add the new chat to the list
       chats: [newChat, ...state.chats],
+      // Set the new chat as the current chat
       currentChatId: newChat.id,
     }));
 
@@ -86,14 +33,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     saveChatsToPersistentStorage(get().chats);
   },
 
-  deleteChat: (id) => {
+  deleteChat: (chatId: string): void => {
     const { chats, currentChatId } = get();
-    const updatedChats = chats.filter((chat) => chat.id !== id);
+    const updatedChats = chats.filter((chat) => chat.id !== chatId);
 
     let newCurrentChatId = currentChatId;
 
     // If we're deleting the current chat, select another one
-    if (currentChatId === id) {
+    if (currentChatId === chatId) {
       newCurrentChatId = updatedChats.length > 0 ? updatedChats[0].id : null;
     }
 
@@ -106,10 +53,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     saveChatsToPersistentStorage(updatedChats);
   },
 
-  favouriteChat: (id: string) => {
+  favouriteChat: (chatId: string): void => {
     const { chats } = get();
     const updatedChats = chats.map((chat) => {
-      if (chat.id === id) {
+      if (chat.id === chatId) {
         return { ...chat, isFavourite: !chat.isFavourite };
       }
       return chat;
@@ -121,13 +68,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     saveChatsToPersistentStorage(updatedChats);
   },
 
-  getCurrentChat: () => {
+  getCurrentChat: (): Chat | null => {
     const { chats, currentChatId } = get();
     if (!currentChatId) return null;
     return chats.find((chat) => chat.id === currentChatId) || null;
   },
 
-  addMessageToCurrentChat: (message) => {
+  addMessageToCurrentChat: (message: Omit<Message, "id">): void => {
     const { chats, currentChatId, createNewChat } = get();
 
     // If no current chat, create one first
@@ -137,7 +84,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       return get().addMessageToCurrentChat(message);
     }
 
-    const newMessage: ChatMessage = {
+    const newMessage: Message = {
       ...message,
       id: Date.now().toString(),
     };
@@ -151,7 +98,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           chat.messages.length === 0 &&
           chat.title.startsWith("New Chat")
         ) {
-          const userMessage = message.content as string;
+          const userMessage = message.content as string; //TODO: fix this typing
           title =
             userMessage.length > 30
               ? userMessage.substring(0, 30) + "..."
@@ -174,7 +121,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     saveChatsToPersistentStorage(updatedChats);
   },
 
-  updateMessage: (messageId, updates) => {
+  updateMessage: (messageId: string, updates: Partial<Message>): void => {
     const { chats, currentChatId } = get();
     if (!currentChatId) return;
 
@@ -203,10 +150,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     saveChatsToPersistentStorage(updatedChats);
   },
 
-  renameChat: (id, newTitle) => {
+  renameChat: (chatId: string, newTitle: string): void => {
     const { chats } = get();
     const updatedChats = chats.map((chat) => {
-      if (chat.id === id) {
+      if (chat.id === chatId) {
         return { ...chat, title: newTitle };
       }
       return chat;
