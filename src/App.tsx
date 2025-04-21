@@ -1,35 +1,61 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/electron-vite.animate.svg'
-import './App.css'
+import { Header } from "@/components/common/header";
+import { AppSidebar } from "@/components/common/sidebar";
+import Chat from "@/features/chat/chat";
+import { ChatInput } from "@/features/chat/chat-input";
+import { useChatStore } from "@/store/chat-store";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { SidebarProvider } from "./components/ui/sidebar";
 
-function App() {
-  const [count, setCount] = useState(0)
+export function App() {
+  const { currentChatId, getCurrentChat, createNewChat } = useChatStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Get the current chat's messages
+  const currentChat = getCurrentChat();
+  const messages = currentChat?.messages || [];
+
+  // Create a new chat if none exists
+  useEffect(() => {
+    if (!currentChatId) {
+      createNewChat();
+    }
+  }, [currentChatId, createNewChat]);
+
+  // Show error toast when error state changes
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   return (
-    <>
-      <div>
-        <a href="https://electron-vite.github.io" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="bg-red-500 text-white p-4 rounded-md">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="relative flex h-screen w-full">
+      <SidebarProvider className="absolute inset-0">
+        <AppSidebar />
+
+        <main className="ml-0 flex h-screen w-full flex-col">
+          <Header />
+
+          <div className="flex-1 overflow-y-auto">
+            <Chat
+              messages={messages}
+              isLoading={isLoading}
+              setError={setError}
+              setIsLoading={setIsLoading}
+            />
+          </div>
+
+          <ChatInput
+            isLoading={isLoading}
+            setError={setError}
+            setIsLoading={setIsLoading}
+          />
+        </main>
+      </SidebarProvider>
+    </div>
+  );
 }
 
-export default App
+export default App;
