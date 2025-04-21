@@ -99,12 +99,11 @@ export function DbChatMessage({
               content={editedSqlContent}
               setContent={setEditedSqlContent}
               onSave={() => saveEditedSql(message.id)}
-              onCancel={() => setEditingSqlId(null)}
             />
           ) : (
             <pre
               id={`sql-message-${message.id}`}
-              className="cursor-pointer overflow-auto rounded-sm bg-slate-50 p-4 font-mono text-sm text-slate-700 dark:bg-slate-900/50 dark:text-slate-300"
+              className="w-full cursor-pointer overflow-x-auto overflow-y-visible rounded-sm bg-slate-50 p-4 font-mono text-sm break-words whitespace-pre-wrap text-slate-700 dark:bg-slate-900/50 dark:text-slate-300"
               onClick={() =>
                 startEditingSql(message.id, message.content as string)
               }
@@ -153,7 +152,6 @@ function SqlEditor({
   content: string;
   setContent: (content: string) => void;
   onSave: () => void;
-  onCancel: () => void;
 }) {
   return (
     <Textarea
