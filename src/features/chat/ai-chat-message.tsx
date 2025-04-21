@@ -6,11 +6,12 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { useDismiss } from "@/hooks/use-dismiss";
 import { executeSql } from "@/services/sql-service";
 import { useChatStore } from "@/store/chat-store";
 import { useDbConnectionStore } from "@/store/db-connection-store";
 import { Edit, Loader2, Play } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 
 export function DbChatMessage({
   message,
@@ -56,9 +57,6 @@ export function DbChatMessage({
     setError(null);
 
     try {
-      // Check if this query has a RETURNING clause (PostgreSQL feature)
-      /*       const hasReturningClause = /\bRETURNING\b/i.test(sqlQuery); */
-
       const result = await executeSql(sqlQuery, dbConfig);
 
       if (result.error) {
@@ -95,23 +93,6 @@ export function DbChatMessage({
       setIsLoading(false);
     }
   };
-
-  // Handle clicks outside of the SQL editing area // TODO: Move to a hook
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        editingSqlId &&
-        !(event.target as Element).closest(".sql-edit-area")
-      ) {
-        saveEditedSql(editingSqlId);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [editingSqlId, editedSqlContent]);
 
   const isEditing = editingSqlId === message.id;
 
@@ -193,10 +174,19 @@ function SqlEditor({
   onSave: () => void;
   onCancel: () => void;
 }) {
+  const sqlEditorRef = useRef<HTMLTextAreaElement>(null);
+  useDismiss({
+    onDismiss: () => {
+      onSave();
+    },
+    elementRef: sqlEditorRef,
+  });
+
   return (
     <Textarea
       className="sql-edit-area min-h-[100px] rounded-sm border-0 bg-slate-50 p-4 font-mono text-sm focus:ring-1 focus:ring-blue-400 dark:bg-slate-900/50 dark:text-slate-300"
       value={content}
+      ref={sqlEditorRef}
       onChange={(e) => setContent(e.target.value)}
       autoFocus
       onKeyDown={(e) => {

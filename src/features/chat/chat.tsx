@@ -1,4 +1,5 @@
-import { ScrollAnchor } from "@/hooks/scroll-anchor";
+import { useScrollAnchor } from "@/hooks/use-scroll-anchor";
+import { useRef } from "react";
 import { DbChatMessage } from "./ai-chat-message";
 import { ResultChatMessage } from "./db-chat-message";
 import { UserChatMessage } from "./user-chat-message";
@@ -14,6 +15,12 @@ export default function Chat({
   setError: (error: string | null) => void;
   setIsLoading: (loading: boolean) => void;
 }) {
+  const scrollAnchorRef = useRef<HTMLDivElement>(null);
+  useScrollAnchor({
+    ref: scrollAnchorRef,
+    dependencies: [messages],
+  });
+
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4 p-4">
       {/* Chat Messages */}
@@ -48,7 +55,7 @@ export default function Chat({
         </div>
       )}
 
-      <ScrollAnchor dependencies={[messages]} />
+      <div ref={scrollAnchorRef} />
     </div>
   );
 }
