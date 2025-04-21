@@ -9,7 +9,7 @@ import OpenAI from "openai";
  * @returns {Promise<SqlGenerationResponse>} AI-generated SQL query and explanation
  */
 export async function generateSql(
-  aiSelection: AiModelSelection,
+  aiModelSelection: AiModelSelection,
   apiKey: string,
   prompt: string,
   dbSchema?: string,
@@ -22,11 +22,11 @@ export async function generateSql(
       };
     }
 
-    switch (aiSelection.selectedProvider) {
+    switch (aiModelSelection.selectedProvider) {
       case "openai":
         return await generateWithOpenAI(
           apiKey,
-          aiSelection.selectedModel as OpenAiModel,
+          aiModelSelection.selectedModel as OpenAiModel,
           prompt,
           dbSchema,
         );
@@ -34,14 +34,14 @@ export async function generateSql(
       case "anthropic":
         return await generateWithAnthropic(
           apiKey,
-          aiSelection.selectedModel as AnthropicModel,
+          aiModelSelection.selectedModel as AnthropicModel,
           prompt,
           dbSchema,
         );
 
       default:
         throw new Error(
-          `Unsupported AI provider: ${aiSelection.selectedProvider ?? "none"}`,
+          `Unsupported AI provider: ${aiModelSelection.selectedProvider ?? "none"}`,
         );
     }
   } catch (error) {
@@ -142,12 +142,12 @@ Return only the SQL query without any explanations. Return pure SQL code without
  * Generates SQL query using Anthropic API
  */
 async function generateWithAnthropic(
-  aiConfig: AiModelConfig,
+  apiKey: string,
   model: AnthropicModel,
   prompt: string,
   dbSchema?: string,
 ): Promise<SqlGenerationResponse> {
-  if (!aiConfig.anthropic?.apiKey) {
+  if (!apiKey) {
     return {
       sqlQuery: "",
       error: "Anthropic API key is missing. Please provide a valid API key.",
@@ -156,7 +156,7 @@ async function generateWithAnthropic(
 
   try {
     const anthropic = new Anthropic({
-      apiKey: aiConfig.anthropic.apiKey,
+      apiKey,
     });
 
     const systemPrompt = `You are an expert SQL query generator. 
@@ -174,7 +174,15 @@ Return only the SQL query without any explanations. Make sure the SQL is valid a
       max_tokens: 1000,
     });
 
-    const sqlQuery = response.content[0]?.text?.trim() || "";
+    // Safely extract SQL query from the response content
+    let sqlQuery = "";
+    if (response.content && response.content.length > 0) {
+      const contentBlock = response.content[0];
+      // Check if it's a text block
+      if (contentBlock.type === "text") {
+        sqlQuery = contentBlock.text.trim();
+      }
+    }
 
     if (!sqlQuery) {
       return {

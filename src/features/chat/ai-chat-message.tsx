@@ -71,7 +71,7 @@ export function DbChatMessage({
           sqlQuery.trim(),
         );
 
-      // Normal query processing (as before)
+      // Normal query processing
       addMessageToCurrentChat({
         type: "db",
         content: {
@@ -86,7 +86,6 @@ export function DbChatMessage({
           sqlQuery: sqlQuery,
         },
       });
-      /*  } */
     } catch (err) {
       console.error("SQL execution error:", err);
       setError(

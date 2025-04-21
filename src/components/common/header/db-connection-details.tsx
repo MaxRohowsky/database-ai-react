@@ -56,6 +56,8 @@ export default function SelectedDBConnection() {
     }
   };
 
+  console.log(selectedDbConfig);
+
   return (
     <>
       <div
@@ -72,8 +74,8 @@ export default function SelectedDBConnection() {
               <span className="">{selectedDbConfig.name}</span>
               {selectedDbConfig.database && (
                 <img
-                  src={`/db-icons/${selectedDbConfig.database}.svg`}
-                  alt={selectedDbConfig.database}
+                  src={`/db-icons/${selectedDbConfig.engine}.svg`}
+                  alt={selectedDbConfig.engine}
                   className="mr-2 h-4 w-4"
                 />
               )}

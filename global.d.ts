@@ -6,13 +6,12 @@ export {};
 
 declare global {
   type AiModelSelection =
-    | { selectedProvider: "openai"; selectedModel: OpenAiModel; apiKey: string }
+    | { selectedProvider: "openai"; selectedModel: OpenAiModel }
     | {
         selectedProvider: "anthropic";
         selectedModel: AnthropicModel;
-        apiKey: string;
       }
-    | { selectedProvider: null; selectedModel: string; apiKey: string };
+    | { selectedProvider: null; selectedModel: string };
 
   type AiModelProvider = "openai" | "anthropic";
 
@@ -73,7 +72,6 @@ declare global {
     id: string;
     type: "user" | "ai" | "db";
     content: SqlGenerationResponse | SqlExecutionResponse | string;
-    /*   columns?: string[]; */
     error?: string;
   }
 
