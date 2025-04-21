@@ -1,17 +1,11 @@
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { useDismiss } from "@/hooks/use-dismiss";
 import { executeSql } from "@/services/sql-service";
 import { useChatStore } from "@/store/chat-store";
 import { useDbConnectionStore } from "@/store/db-connection-store";
-import { Edit, Loader2, Play } from "lucide-react";
-import { useRef, useState } from "react";
+import { Edit, Play } from "lucide-react";
+import { useState } from "react";
 
 export function DbChatMessage({
   message,
@@ -97,68 +91,56 @@ export function DbChatMessage({
   const isEditing = editingSqlId === message.id;
 
   return (
-    <Card className="overflow-hidden rounded-sm border border-slate-200 shadow-none dark:border-slate-800">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 dark:bg-slate-900/30">
-        <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          Generated SQL
-        </h3>
-        {!isEditing && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() =>
-              startEditingSql(message.id, message.content as string)
-            }
-            className="h-6 w-6 hover:bg-slate-200 dark:hover:bg-slate-800"
-          >
-            <Edit className="h-3.5 w-3.5 text-slate-500" />
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent className="p-0">
-        {isEditing ? (
-          <SqlEditor
-            content={editedSqlContent}
-            setContent={setEditedSqlContent}
-            onSave={() => saveEditedSql(message.id)}
-            onCancel={() => setEditingSqlId(null)}
-          />
-        ) : (
-          <pre
-            id={`sql-message-${message.id}`}
-            className="mx-4 cursor-pointer overflow-auto rounded-sm bg-slate-50 p-4 font-mono text-sm text-slate-700 dark:bg-slate-900/50 dark:text-slate-300"
-            onClick={() =>
-              startEditingSql(message.id, message.content as string)
-            }
-          >
-            {message.content as string}
-          </pre>
-        )}
-      </CardContent>
-      <CardFooter className="dark:bg-slate-900/30">
-        <Button
-          onClick={() =>
-            executeQuery(
-              isEditing ? editedSqlContent : (message.content as string),
-            )
-          }
-          disabled={!dbConfig || isLoading}
-          className="group px-4 transition-all"
-          variant={isLoading ? "secondary" : "default"}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              <span className="text-xs font-medium">Executing...</span>
-            </>
+    <Card className="overflow-hidden rounded-sm border-none p-0 shadow-none">
+      <CardContent className="m-0 flex flex-row items-center justify-between bg-slate-50 px-2">
+        <div className="m-0 flex flex-1">
+          {isEditing ? (
+            <SqlEditor
+              content={editedSqlContent}
+              setContent={setEditedSqlContent}
+              onSave={() => saveEditedSql(message.id)}
+              onCancel={() => setEditingSqlId(null)}
+            />
           ) : (
-            <>
-              <Play className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
-              <span className="text-xs font-medium">Execute</span>
-            </>
+            <pre
+              id={`sql-message-${message.id}`}
+              className="cursor-pointer overflow-auto rounded-sm bg-slate-50 p-4 font-mono text-sm text-slate-700 dark:bg-slate-900/50 dark:text-slate-300"
+              onClick={() =>
+                startEditingSql(message.id, message.content as string)
+              }
+            >
+              {message.content as string}
+            </pre>
           )}
-        </Button>
-      </CardFooter>
+        </div>
+        <div className="flex flex-row items-center gap-2 px-2">
+          {!isEditing && (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() =>
+                startEditingSql(message.id, message.content as string)
+              }
+              className="group px-4 transition-all"
+            >
+              <Edit className="h-3.5 w-3.5 text-slate-500 transition-transform group-hover:scale-110" />
+            </Button>
+          )}
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() =>
+              executeQuery(
+                isEditing ? editedSqlContent : (message.content as string),
+              )
+            }
+            disabled={!dbConfig || isLoading}
+            className="group px-4 transition-all"
+          >
+            <Play className="h-4 w-4 text-green-500 transition-transform group-hover:scale-110" />
+          </Button>
+        </div>
+      </CardContent>
     </Card>
   );
 }
@@ -167,34 +149,20 @@ function SqlEditor({
   content,
   setContent,
   onSave,
-  onCancel,
 }: {
   content: string;
   setContent: (content: string) => void;
   onSave: () => void;
   onCancel: () => void;
 }) {
-  const sqlEditorRef = useRef<HTMLTextAreaElement>(null);
-  useDismiss({
-    onDismiss: () => {
-      onSave();
-    },
-    elementRef: sqlEditorRef,
-  });
-
   return (
     <Textarea
-      className="sql-edit-area min-h-[100px] rounded-sm border-0 bg-slate-50 p-4 font-mono text-sm focus:ring-1 focus:ring-blue-400 dark:bg-slate-900/50 dark:text-slate-300"
+      className="sql-edit-area rounded-sm p-4 font-mono text-sm focus:ring-1 focus:ring-blue-400" /*  min-h-[100px] */
       value={content}
-      ref={sqlEditorRef}
       onChange={(e) => setContent(e.target.value)}
       autoFocus
-      onKeyDown={(e) => {
-        if (e.key === "Escape") {
-          onCancel();
-        } else if (e.key === "Enter" && e.ctrlKey) {
-          onSave();
-        }
+      onBlur={() => {
+        onSave();
       }}
     />
   );

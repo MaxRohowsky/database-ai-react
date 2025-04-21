@@ -2,7 +2,7 @@ import { SchemaView } from "@/components/dialog/schema-view";
 import { fetchDbSchema } from "@/services/sql-service";
 import { useDbConnectionStore } from "@/store/db-connection-store";
 import { Database } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 export default function SelectedDBConnection() {
@@ -12,21 +12,6 @@ export default function SelectedDBConnection() {
   const [fetchingSchema, setFetchingSchema] = useState(false);
 
   const selectedDbConfig = getSelectedDbConfig();
-
-  // Add keydown event listener for Tab key
-  useEffect(() => {
-    const handleKeyDown = async (e: KeyboardEvent) => {
-      if (e.key === "Tab" && !e.shiftKey && !e.ctrlKey && !e.altKey) {
-        if (!e.defaultPrevented) {
-          e.preventDefault();
-          await handleFetchSchema();
-        }
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [selectedDbConfig]); // Re-add listener when connection changes
 
   const handleFetchSchema = async () => {
     if (!selectedDbConfig) {
@@ -55,8 +40,6 @@ export default function SelectedDBConnection() {
       setFetchingSchema(false);
     }
   };
-
-  console.log(selectedDbConfig);
 
   return (
     <>
