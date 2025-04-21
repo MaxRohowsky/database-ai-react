@@ -22,6 +22,8 @@ export async function generateSql(
       };
     }
 
+    console.log("dbSchema", dbSchema);
+
     switch (aiModelSelection.selectedProvider) {
       case "openai":
         return await generateWithOpenAI(
@@ -78,6 +80,7 @@ async function generateWithOpenAI(
     const systemPrompt = `You are an expert SQL query generator. 
 Your task is to translate natural language questions into valid SQL queries.
 ${dbSchema ? `Use the following database schema information: ${dbSchema}` : ""}
+Use PostgreSQL syntax and use quotes for table and column names from the database schema.
 Return only the SQL query without any explanations. Return pure SQL code without any markdown code blocks.`;
 
     console.log(`Sending request to OpenAI with model: ${model}`);
@@ -92,6 +95,8 @@ Return only the SQL query without any explanations. Return pure SQL code without
     });
 
     const sqlQuery = response.choices[0]?.message.content?.trim() || "";
+
+    console.log("Generated SQL query:", sqlQuery);
 
     if (!sqlQuery) {
       return {
