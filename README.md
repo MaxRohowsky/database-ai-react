@@ -7,9 +7,12 @@
 
 Hey, what's good? :) Max here 👋 You're super early — and I love that :)
 
-Exec. Summary (TLDR): I'm building an AI first DB client.
+-----------------------------------------------------
+**Summary**: I'm building an AI first DB client.
 - Download link: [maxrohowsky.com/database-chat](https://maxrohowsky.com/database-chat)
 - Feature requests: Simply open a GitHub Issue
+- Details below 👇
+-----------------------------------------------------
 
 ![demo5](https://github.com/user-attachments/assets/c96773f7-6152-4755-84c1-e6935884ebca)
 
