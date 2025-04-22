@@ -83,9 +83,6 @@ export function ChatInput({
         }
       }
 
-      console.log("aiModelSelection", aiModelSelection);
-      console.log("aiModelConfig", aiModelConfig);
-
       const apiKey = getSelectedModelApiKey(aiModelConfig, aiModelSelection);
 
       if (!apiKey) {

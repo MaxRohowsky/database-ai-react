@@ -192,27 +192,11 @@ function DatabaseEngineField({ form }: { form: UseFormReturn<DbConfig> }) {
             <SelectContent>
               <SelectItem value="postgres">
                 <img
-                  src="/db-icons/postgres.svg"
+                  src="./db-icons/postgres.svg"
                   alt="PostgreSQL"
                   className="mr-2 h-4 w-4"
                 />
                 PostgreSQL
-              </SelectItem>
-              <SelectItem value="supabase">
-                <img
-                  src="/db-icons/supabase.svg"
-                  alt="Supabase"
-                  className="mr-2 h-4 w-4"
-                />
-                Supabase
-              </SelectItem>
-              <SelectItem value="mysql">
-                <img
-                  src="/db-icons/mysql.svg"
-                  alt="MySQL"
-                  className="mr-2 h-4 w-4"
-                />
-                MySQL
               </SelectItem>
             </SelectContent>
           </Select>

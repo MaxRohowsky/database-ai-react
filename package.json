@@ -1,7 +1,7 @@
 {
   "name": "dbai",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.2",
   "type": "module",
   "author": "Dr. Maximilian Rohowsky",
   "scripts": {
@@ -13,7 +13,33 @@
   "build": {
     "appId": "com.dbai.app",
     "productName": "DBAI",
-    "copyright": "Copyright © 2025 ${author}"
+    "copyright": "Copyright © 2025 ${author}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "public/**/*",
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "path/to/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "path/to/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "path/to/icon.png"
+    }
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

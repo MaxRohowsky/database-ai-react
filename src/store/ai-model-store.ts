@@ -11,8 +11,8 @@ const DEFAULT_AI_MODEL_CONFIG: AiModelConfig = {
 };
 
 const DEFAULT_AI_MODEL_SELECTION: AiModelSelection = {
-  selectedModel: "",
   selectedProvider: null,
+  selectedModel: "",
 };
 
 export const useAiModelStore = create<AiModelStore>((set) => ({
@@ -39,10 +39,11 @@ export const useAiModelStore = create<AiModelStore>((set) => ({
   },
 
   setAiModelSelection: (selection) => {
-    set((state) => ({
-      aiModelSelection: state.aiModelSelection
-        ? { ...state.aiModelSelection, ...selection }
-        : { ...DEFAULT_AI_MODEL_SELECTION, ...selection },
+    set(() => ({
+      aiModelSelection: {
+        ...DEFAULT_AI_MODEL_SELECTION,
+        ...selection,
+      } as AiModelSelection,
     }));
 
     // Persist to localStorage
