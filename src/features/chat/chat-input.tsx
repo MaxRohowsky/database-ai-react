@@ -1,5 +1,6 @@
 import { useChatStore } from "@/store/chat-store";
 import { useDbConnectionStore } from "@/store/db-connection-store";
+import { useSettingsStore } from "@/store/settings-store";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -10,7 +11,7 @@ import {
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchDbSchema, generateSql } from "@/services/sql-service";
+import { executeSql, fetchDbSchema, generateSql } from "@/services/sql-service";
 import { useAiModelStore } from "@/store/ai-model-store";
 import { ChevronUp, Loader2, Send } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -26,6 +27,7 @@ export function ChatInput({
 }) {
   const [inputValue, setInputValue] = useState("");
   const [enterToSend, setEnterToSend] = useState(false);
+  const { autoExecuteSql, setAutoExecuteSql } = useSettingsStore();
   const { aiModelConfig, aiModelSelection } = useAiModelStore();
   const { getSelectedDbConfig } = useDbConnectionStore();
   const dbConfig = getSelectedDbConfig();
@@ -43,6 +45,54 @@ export function ChatInput({
   const toggleEnterToSend = (value: boolean) => {
     setEnterToSend(value);
     localStorage.setItem("enterToSend", value.toString());
+  };
+
+  const toggleAutoExecuteSql = (value: boolean) => {
+    setAutoExecuteSql(value);
+  };
+
+  const executeGeneratedSql = async (sqlQuery: string) => {
+    if (!dbConfig) {
+      setError(
+        "Database not configured. Please configure a database connection first.",
+      );
+      return;
+    }
+
+    try {
+      const result = await executeSql(sqlQuery, dbConfig);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // Check if it's a modification query by looking for keywords
+      const isModification =
+        /^\s*(INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRUNCATE)/i.test(
+          sqlQuery.trim(),
+        );
+
+      // Normal query processing
+      addMessageToCurrentChat({
+        type: "db",
+        content: {
+          rows: result.rows || [],
+          columns: result.columns || [],
+          // If it's a modification query with zero rows returned, likely affected rows
+          affectedRows:
+            isModification && result.rows?.length === 0
+              ? result.affectedRows
+              : undefined,
+          // Store the original query for reference
+          sqlQuery: sqlQuery,
+        },
+      });
+    } catch (err) {
+      console.error("SQL execution error:", err);
+      setError(
+        err instanceof Error ? err.message : "An error occurred executing SQL",
+      );
+    }
   };
 
   const handleSubmit = async () => {
@@ -109,6 +159,11 @@ export function ChatInput({
         type: "ai",
         content: sqlResponse.sqlQuery,
       });
+
+      // If auto-execute is enabled, execute the SQL immediately
+      if (autoExecuteSql && dbConfig) {
+        await executeGeneratedSql(sqlResponse.sqlQuery);
+      }
     } catch (err) {
       console.error("SQL generation error:", err);
       setError(
@@ -167,15 +222,27 @@ export function ChatInput({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-50 p-3" align="end">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="enter-to-send" className="text-sm">
-                    Enter to send
-                  </Label>
-                  <Switch
-                    id="enter-to-send"
-                    checked={enterToSend}
-                    onCheckedChange={toggleEnterToSend}
-                  />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="enter-to-send" className="text-sm">
+                      Enter to Send
+                    </Label>
+                    <Switch
+                      id="enter-to-send"
+                      checked={enterToSend}
+                      onCheckedChange={toggleEnterToSend}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="auto-execute-sql" className="text-sm">
+                      Auto Execute SQL
+                    </Label>
+                    <Switch
+                      id="auto-execute-sql"
+                      checked={autoExecuteSql}
+                      onCheckedChange={toggleAutoExecuteSql}
+                    />
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>
