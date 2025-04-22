@@ -1,8 +1,15 @@
 # Database Chat
 
-Hey, what's good? :) Max here 👋
+[![Version](https://img.shields.io/badge/VERSION-0.0.2-brightgreen?style=for-the-badge)](https://maxrohowsky.com/database-chat)
+[![Status](https://img.shields.io/badge/STATUS-EARLY_ACCESS-orange?style=for-the-badge)](https://maxrohowsky.com/database-chat)
+[![Discord](https://img.shields.io/badge/COMMUNITY-JOIN_NOW-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/JERatQsfY8)
+[![Twitter](https://img.shields.io/badge/FOLLOW-@MAXROHOWSKY-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://x.com/MaxRohowsky)
 
-You're super early — and I love that :)
+Hey, what's good? :) Max here 👋 You're super early — and I love that :)
+
+Exec. Summary (TLDR): I'm building an AI first DB client.
+- Download link: [maxrohowsky.com/database-chat](https://maxrohowsky.com/database-chat)
+- Feature requests: Simply open a GitHub Issue
 
 ![demo5](https://github.com/user-attachments/assets/c96773f7-6152-4755-84c1-e6935884ebca)
 
