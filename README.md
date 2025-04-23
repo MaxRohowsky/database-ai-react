@@ -28,10 +28,10 @@ I'm not happy with the currently available clients - especially PG admin which (
 ## 💣 What I want to make:
 
 Here's what's on my wishlist:
-- I want the query syntax to match the database engine that I use without having to learn favours of SQL across ~20 DB engines.
-- I want the SQL queries to be tailored to my DB tables by sending the DB Schema as context.
-- A beautiful desktop native app that saves all my env vars on my Computer not some random cloud.
-- Supports all the relational database technologies that i use on the regular in one unified client app. 
+- I want the query syntax to match the database engine without having to learn favours of SQL across ~20 DB engines.
+- I want SQL queries to match my DB tables by sending the DB Schema to the AI as context.
+- I want a beautiful desktop native app that saves all my sensitive information on my computer - not some random cloud.
+- I want support for all the relational database technologies in one unified client app. 
 
 ## 🚀 Try It Out
 
