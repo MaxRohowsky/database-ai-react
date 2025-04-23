@@ -23,6 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
-
+.env
+env
 dist-electron
+release
 
