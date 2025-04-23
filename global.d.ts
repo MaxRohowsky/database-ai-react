@@ -5,13 +5,17 @@ export {};
 // -----------------------------
 
 declare global {
-  type AiModelSelection =
+  type AiModelSelection = {
+    selectedProvider: AiModelProvider | null;
+    selectedModel: string;
+  };
+  /*   type AiModelSelection =
     | { selectedProvider: "openai"; selectedModel: OpenAiModel }
     | {
         selectedProvider: "anthropic";
         selectedModel: AnthropicModel;
       }
-    | { selectedProvider: null; selectedModel: string };
+    | { selectedProvider: null; selectedModel: string }; */
 
   type AiModelProvider = "openai" | "anthropic";
 

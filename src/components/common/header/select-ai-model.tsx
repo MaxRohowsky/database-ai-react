@@ -62,7 +62,7 @@ export default function AiConfigDialog() {
     // Update the selected model
     setAiModelSelection({
       selectedModel: selectedModel.id,
-      selectedProvider: selectedModel.provider as "openai" | "anthropic",
+      selectedProvider: selectedModel.provider as AiModelProvider,
     });
   };
 
@@ -91,7 +91,7 @@ export default function AiConfigDialog() {
                 <>
                   <DropdownMenuLabel className="flex items-center gap-2">
                     <img
-                      src="/ai-icons/openai.svg"
+                      src="./ai-icons/openai.svg"
                       alt="OpenAI Logo"
                       width={16}
                       height={16}
@@ -122,7 +122,7 @@ export default function AiConfigDialog() {
                 <>
                   <DropdownMenuLabel className="flex items-center gap-2">
                     <img
-                      src="/ai-icons/anthropic.svg"
+                      src="./ai-icons/anthropic.svg"
                       alt="Anthropic Logo"
                       width={16}
                       height={16}

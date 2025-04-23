@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { Toaster } from "sonner";
-import App from "./app.tsx";
+import App from "./App.tsx";
 import "./index.css";
 import { initializeStores } from "./store";
 
