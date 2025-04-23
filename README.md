@@ -8,7 +8,7 @@
 Hey, Max here 👋 You're early :)
 
 -----------------------------------------------------
-**Summary**: I'm building an AI first DB client.
+**Summary**: I'm testing the waters to understand if there's demand for an AI first Database client.
 - Download link: [maxrohowsky.com/database-chat](https://maxrohowsky.com/database-chat)
 - Feature requests: Simply open a GitHub Issue
 - Details below 👇
