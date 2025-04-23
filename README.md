@@ -5,7 +5,7 @@
 [![Discord](https://img.shields.io/badge/COMMUNITY-JOIN_NOW-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/JERatQsfY8)
 [![Twitter](https://img.shields.io/badge/FOLLOW-@MAXROHOWSKY-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://x.com/MaxRohowsky)
 
-Hey, Max here 👋 You're super early — and I love that :)
+Hey, Max here 👋 You're early :)
 
 -----------------------------------------------------
 **Summary**: I'm building an AI first DB client.
