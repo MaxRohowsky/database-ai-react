@@ -38,8 +38,6 @@ Here's what's on my wishlist:
 * **Download v0.0.2**: [maxrohowsky.com/database-chat](https://maxrohowsky.com/database-chat)
 * **Join the Community**: [discord.gg/JERatQsfY8](https://discord.gg/JERatQsfY8)
 
-P.S. Download website still looks sketchy af. sorry for that :) If it looks too sketchy, then feel free to fork the repo and run the build process.
-
 ## 🛠️ Dev Pipeline (WIP)
 
 What's done:
