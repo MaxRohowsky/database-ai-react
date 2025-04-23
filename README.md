@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/VERSION-0.0.2-brightgreen?style=for-the-badge)](https://maxrohowsky.com/database-chat)
 [![Status](https://img.shields.io/badge/STATUS-EARLY_ACCESS-orange?style=for-the-badge)](https://maxrohowsky.com/database-chat)
-[![Discord](https://img.shields.io/badge/COMMUNITY-JOIN_NOW-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/JERatQsfY8)
+[![Discord](https://img.shields.io/badge/COMMUNITY-JOIN_HERE-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/JERatQsfY8)
 [![Twitter](https://img.shields.io/badge/FOLLOW-@MAXROHOWSKY-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://x.com/MaxRohowsky)
 
 Hey, Max here 👋 You're early :)
