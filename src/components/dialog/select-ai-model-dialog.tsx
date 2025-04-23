@@ -73,7 +73,7 @@ function SelectAiModelDialog({
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="openai" className="flex items-center gap-2">
                   <img
-                    src="/ai-icons/openai.svg"
+                    src="./ai-icons/openai.svg"
                     alt="OpenAI Logo"
                     width={18}
                     height={18}
@@ -86,7 +86,7 @@ function SelectAiModelDialog({
                   className="flex items-center gap-2"
                 >
                   <img
-                    src="/ai-icons/anthropic.svg"
+                    src="./ai-icons/anthropic.svg"
                     alt="Anthropic Logo"
                     width={18}
                     height={18}
