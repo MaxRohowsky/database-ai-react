@@ -5,7 +5,7 @@
 [![Discord](https://img.shields.io/badge/COMMUNITY-JOIN_NOW-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/JERatQsfY8)
 [![Twitter](https://img.shields.io/badge/FOLLOW-@MAXROHOWSKY-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://x.com/MaxRohowsky)
 
-Hey, what's good? :) Max here 👋 You're super early — and I love that :)
+Hey, Max here 👋 You're super early — and I love that :)
 
 -----------------------------------------------------
 **Summary**: I'm building an AI first DB client.
@@ -30,7 +30,7 @@ I'm not happy with the currently available clients - especially PG admin which (
 Here's what I want:
 - I want the query syntax to match the database engine that I use without having to learn favours of SQL across ~20 DB engines.
 - I want the SQL queries to be tailored to my DB tables by sending the DB Schema as context.
-- A beautiful desktop native app that saves all my env vars on my Computer not some random ass cloud.
+- A beautiful desktop native app that saves all my env vars on my Computer not some random cloud.
 - Supports all the relational database technologies that i use on the regular in one unified client app.  
 - A bomb dark mode.
 
@@ -57,7 +57,7 @@ What I'm currently working on:
 * 🌲 Schema & table tree
 * 📘 Setup guides for connecting your DBs
 * 🔌 Support for more LLM providers
-* 🎁 One *secret feature* I'm really excited about... it'll be the make or brake feature of this app 😎
+* 🎁 One *secret feature* I'm really excited about... 😎
 
 ## 📬 Feature Requests or Feedback?
 
