@@ -31,8 +31,7 @@ Here's what I want:
 - I want the query syntax to match the database engine that I use without having to learn favours of SQL across ~20 DB engines.
 - I want the SQL queries to be tailored to my DB tables by sending the DB Schema as context.
 - A beautiful desktop native app that saves all my env vars on my Computer not some random cloud.
-- Supports all the relational database technologies that i use on the regular in one unified client app.  
-- A bomb dark mode.
+- Supports all the relational database technologies that i use on the regular in one unified client app. 
 
 ## 🚀 Try It Out
 
